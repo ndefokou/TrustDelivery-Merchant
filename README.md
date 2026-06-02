@@ -1,132 +1,203 @@
-# TrustDelivery
+# TrustDelivery Merchant Portal
 
-A centralized delivery management platform for businesses in Yaoundé, providing end-to-end tracking and accountability for every delivery.
-
-## Problem Statement
-
-Many businesses in Yaoundé sell products through WhatsApp, Facebook, Instagram, and physical shops. Once a product leaves the shop, they lose visibility over what happens next.
-
-**Common issues include:**
-
-- Products not being delivered
-- Products being stolen or misplaced
-- Customers claiming they never received the product
-- Riders claiming customers were unavailable
-- No centralized tracking system
-- No reliable proof of delivery
-
-TrustDelivery solves this by providing a centralized delivery management platform where every delivery is tracked from creation to completion.
-
----
-
-## The Ecosystem
-
-The platform consists of three main actors:
-
-```text
-Merchant → Creates Delivery Request
-    ↓
-Administrator → Assigns Delivery
-    ↓
-Rider → Executes Delivery
-    ↓
-Delivery Result → Merchant + Administrator Updated
-```
-
----
+A production-quality merchant dashboard for delivery management, built with Rust (Actix-web) backend and React TypeScript frontend with Supabase database.
 
 ## Features
 
-### Merchant Portal
+### Delivery Management
+- **Create Deliveries**: Complete delivery creation flow with:
+  - Product description and value input
+  - Customer name and phone number (Cameroon format validation)
+  - Address autocomplete with Yaoundé locations
+  - Automatic distance and cost calculation
+  - Payment method selection (Orange Money, MTN MoMo, Merchant Wallet)
 
-The Merchant Portal is for businesses that want products delivered (online stores, WhatsApp sellers, Instagram sellers, electronics shops, fashion stores, pharmacies).
+### Pricing Rules
+- 0-3 km: 1,000 FCFA
+- 3-6 km: 1,500 FCFA
+- 6-10 km: 2,000 FCFA
+- 10+ km: 3,000 FCFA
 
-**Key Capabilities:**
-- Create delivery requests with product and customer information
-- Automatic delivery cost calculation based on distance
-- Real-time delivery tracking
-- Payment via Orange Money, MTN MoMo, or Merchant Wallet
-- Delivery history and proof of delivery (OTP verification)
+### Dashboard
+- Active deliveries overview
+- Deliveries awaiting assignment
+- In-transit deliveries
+- Delivered deliveries
+- Failed deliveries
+- Total delivery spending
 
-**Delivery Statuses:**
-- Awaiting Assignment
-- Assigned
-- In Transit
-- Delivered
-- Failed
+### Delivery Tracking
+- Status timeline with visual progress
+- Status badges (Awaiting Assignment, Assigned, In Transit, Delivered, Failed)
+- Proof of delivery with OTP verification
+- GPS coordinates placeholder
+- Delivery photo placeholder
 
-### Administrator Portal
+### Failed Delivery Handling
+- Failure reasons display
+- Rider notes
+- Customer Unavailable, Wrong Address, Phone Unreachable, Customer Refused Product, Other
 
-The Administrator Portal is the operational center of TrustDelivery.
+## Tech Stack
 
-**Key Capabilities:**
-- Dashboard with active riders, deliveries, and revenue metrics
-- Delivery queue management
-- Rider assignment based on workload, area, availability, and performance
-- Rider management (create, update, suspend, remove)
-- Delivery monitoring with status filters
-- Rider performance reports (daily, weekly, monthly)
-- Revenue reports (daily, weekly, monthly, yearly)
+### Backend
+- **Rust** with Actix-web framework
+- **PostgreSQL** (Supabase)
+- **SQLx** for database operations
 
-### Rider Portal
+### Frontend
+- **React 18** with TypeScript
+- **React Router** for navigation
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **date-fns** for date formatting
 
-The Rider Portal is designed to be mobile-first.
+## Project Structure
 
-**Key Capabilities:**
-- View assigned deliveries
-- Start delivery (status becomes "In Transit")
-- Complete delivery with OTP verification
-- Report failed deliveries with reasons
-- Daily expense tracking (fuel, repairs, parking, other)
+```
+TrustDelivery-Merchant/
+├── backend/
+│   ├── src/
+│   │   ├── config.rs          # App configuration
+│   │   ├── db/
+│   │   │   ├── mod.rs
+│   │   │   └── migrations.rs  # Database migrations
+│   │   ├── handlers/
+│   │   │   ├── mod.rs
+│   │   │   ├── routes.rs      # API routes
+│   │   │   ├── delivery_handler.rs
+│   │   │   ├── address_handler.rs
+│   │   │   └── merchant_handler.rs
+│   │   ├── models/
+│   │   │   ├── mod.rs
+│   │   │   ├── delivery.rs
+│   │   │   ├── address.rs
+│   │   │   ├── merchant.rs
+│   │   │   └── payment.rs
+│   │   ├── services/
+│   │   │   ├── mod.rs
+│   │   │   ├── delivery_service.rs
+│   │   │   ├── address_service.rs
+│   │   │   ├── merchant_service.rs
+│   │   │   └── pricing_service.rs
+│   │   ├── utils/
+│   │   │   ├── mod.rs
+│   │   │   └── response.rs
+│   │   └── main.rs
+│   ├── Cargo.toml
+│   └── .env
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── Layout.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── CreateDelivery.tsx
+│   │   │   └── DeliveryDetails.tsx
+│   │   ├── types/
+│   │   │   └── index.ts
+│   │   ├── data/
+│   │   │   └── mockData.ts
+│   │   ├── App.tsx
+│   │   ├── index.tsx
+│   │   └── index.css
+│   ├── public/
+│   │   └── index.html
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── tailwind.config.js
+├── supabase/
+│   └── schema.sql
+└── README.md
+```
 
-**Failed Delivery Reasons:**
-- Customer Unavailable
-- Wrong Address
-- Phone Unreachable
-- Customer Refused Product
-- Other
+## Setup Instructions
 
----
+### Prerequisites
+- Rust (latest stable)
+- Node.js 18+
+- Supabase account
 
-## Core Value Proposition
+### 1. Database Setup (Supabase)
 
-TrustDelivery is not just a delivery application. It is a **delivery accountability platform**.
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Go to SQL Editor and run the contents of `supabase/schema.sql`
+3. Get your database connection string from Project Settings > Database
 
-Every delivery has:
-- A merchant who requested it
-- An administrator who assigned it
-- A rider responsible for it
-- A verifiable delivery outcome
+### 2. Backend Setup
 
-This creates transparency, trust, and operational control for businesses in Yaoundé.
+```bash
+cd backend
 
----
+# Copy environment file
+cp .env.example .env
 
-## Future Roadmap
+# Edit .env with your Supabase credentials
+# DATABASE_URL=postgresql://postgres:your-password@db.your-project.supabase.co:5432/postgres
 
-### Version 2
-- GPS live tracking
-- Route optimization
-- Customer notifications
-- Delivery photos
-- Merchant wallet
-- Cash-On-Delivery management
+# Run the backend
+cargo run
+```
 
-### Version 3
-- Douala expansion
-- Mobile apps (Android/iPhone)
-- Rider earnings management
-- AI-assisted route planning
-- Nationwide delivery network
+The API will be available at `http://localhost:8080`
 
----
+### 3. Frontend Setup
 
-## Getting Started
+```bash
+cd frontend
 
-*Documentation to be added as development progresses.*
+# Install dependencies
+npm install
 
----
+# Start development server
+npm start
+```
+
+The frontend will be available at `http://localhost:3000`
+
+## API Endpoints
+
+### Deliveries
+- `GET /api/deliveries` - List all deliveries (with pagination)
+- `POST /api/deliveries` - Create a new delivery
+- `GET /api/deliveries/:id` - Get delivery by ID
+- `GET /api/deliveries/stats` - Get delivery statistics
+- `POST /api/deliveries/calculate-cost` - Calculate delivery cost
+
+### Addresses
+- `GET /api/addresses/search` - Search addresses (autocomplete)
+- `GET /api/addresses/saved` - Get saved addresses
+
+### Merchant
+- `GET /api/merchant/profile` - Get merchant profile
+- `GET /api/merchant/wallet` - Get wallet balance
+
+## Environment Variables
+
+### Backend (.env)
+```
+HOST=0.0.0.0
+PORT=8080
+DATABASE_URL=postgresql://...
+JWT_SECRET=your-secret-key
+```
+
+## Development Notes
+
+### Assumptions
+- Merchant is already authenticated (no login/registration pages)
+- Default merchant ID is used for demo purposes
+- Distance calculation uses Haversine formula
+- Address autocomplete includes mock Yaoundé locations
+
+### Future Enhancements
+- Real authentication with Supabase Auth
+- Real-time delivery tracking with WebSockets
+- Push notifications for delivery updates
+- Integration with payment providers
+- Rider mobile app integration
+- Admin dashboard for delivery management
 
 ## License
 
-*License information to be added.*
+MIT License

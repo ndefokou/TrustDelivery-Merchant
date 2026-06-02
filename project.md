@@ -574,3 +574,5 @@ Every delivery has:
 * A verifiable delivery outcome.
 
 This creates transparency, trust, and operational control for businesses in Yaoundé while giving your company a scalable logistics service that can grow city by city.
+
+DB-pw=Tnarthur@022372#^%&gdvvaoudadada
