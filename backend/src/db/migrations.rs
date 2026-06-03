@@ -146,13 +146,21 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    // Create indexes
+    // Create indexes (split into separate queries for Supabase pooler compatibility)
     sqlx::query(
-        r#"
-        CREATE INDEX IF NOT EXISTS idx_deliveries_merchant_id ON deliveries(merchant_id);
-        CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status);
-        CREATE INDEX IF NOT EXISTS idx_deliveries_created_at ON deliveries(created_at);
-        "#,
+        "CREATE INDEX IF NOT EXISTS idx_deliveries_merchant_id ON deliveries(merchant_id);",
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status);",
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_deliveries_created_at ON deliveries(created_at);",
     )
     .execute(pool)
     .await?;

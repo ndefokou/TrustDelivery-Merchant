@@ -16,6 +16,7 @@ impl<T> ApiResponse<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn success_with_message(data: T, message: &str) -> Self {
         Self {
             success: true,

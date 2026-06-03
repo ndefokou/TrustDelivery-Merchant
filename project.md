@@ -575,4 +575,4 @@ Every delivery has:
 
 This creates transparency, trust, and operational control for businesses in Yaoundé while giving your company a scalable logistics service that can grow city by city.
 
-DB-pw=Tnarthur@022372#^%&gdvvaoudadada
+DB-pw=4vsVJ/82VYk_5Ny

@@ -18,6 +18,7 @@ pub struct Merchant {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MerchantStats {
     pub total_deliveries: i64,
     pub active_deliveries: i64,
@@ -26,6 +27,7 @@ pub struct MerchantStats {
 }
 
 impl Merchant {
+    #[allow(dead_code)]
     pub fn new(
         email: String,
         business_name: String,

@@ -1,6 +1,5 @@
 use sqlx::PgPool;
 use uuid::Uuid;
-use chrono::Utc;
 use crate::models::{
     Delivery, DeliveryListResponse, DeliveryStats, DeliveryTimelineEvent,
     DeliveryStatus, CreateDeliveryRequest, DeliveryCostCalculation,
@@ -123,27 +122,31 @@ pub async fn create_delivery(
     request: CreateDeliveryRequest,
 ) -> Result<Delivery, sqlx::Error> {
     // Get address details
-    let address = sqlx::query!(
-        "SELECT id, address_text, latitude, longitude, area, is_saved, created_at FROM addresses WHERE id = $1",
-        request.delivery_address_id
+    let address = sqlx::query_as::<_, (Uuid, String, f64, f64, Option<String>, bool, chrono::DateTime<chrono::Utc>)>(
+        "SELECT id, address_text, latitude, longitude, area, is_saved, created_at FROM addresses WHERE id = $1"
     )
+    .bind(request.delivery_address_id)
     .fetch_one(pool)
     .await?;
 
+    let (_addr_id, address_text, lat, lon, _area, _is_saved, _created_at) = address;
+
     // Get merchant's dispatch location
-    let merchant = sqlx::query!(
-        "SELECT dispatch_latitude, dispatch_longitude FROM merchants WHERE id = $1",
-        merchant_id
+    let merchant = sqlx::query_as::<_, (f64, f64)>(
+        "SELECT dispatch_latitude, dispatch_longitude FROM merchants WHERE id = $1"
     )
+    .bind(merchant_id)
     .fetch_one(pool)
     .await?;
+
+    let (dispatch_lat, dispatch_lon) = merchant;
 
     // Calculate distance
     let distance_km = pricing_service::calculate_distance(
-        merchant.dispatch_latitude,
-        merchant.dispatch_longitude,
-        address.latitude,
-        address.longitude,
+        dispatch_lat,
+        dispatch_lon,
+        lat,
+        lon,
     );
 
     // Calculate cost
@@ -186,7 +189,7 @@ pub async fn create_delivery(
     .bind(&request.customer_name)
     .bind(&request.customer_phone)
     .bind(request.delivery_address_id)
-    .bind(&address.address_text)
+    .bind(&address_text)
     .bind(distance_km)
     .bind(delivery_cost)
     .bind(payment_method_str)
@@ -262,27 +265,31 @@ pub async fn calculate_cost(
     address_id: Uuid,
 ) -> Result<DeliveryCostCalculation, sqlx::Error> {
     // Get address
-    let address = sqlx::query!(
-        "SELECT latitude, longitude FROM addresses WHERE id = $1",
-        address_id
+    let address = sqlx::query_as::<_, (f64, f64)>(
+        "SELECT latitude, longitude FROM addresses WHERE id = $1"
     )
+    .bind(address_id)
     .fetch_one(pool)
     .await?;
 
+    let (lat, lon) = address;
+
     // Get merchant's dispatch location
-    let merchant = sqlx::query!(
-        "SELECT dispatch_latitude, dispatch_longitude FROM merchants WHERE id = $1",
-        merchant_id
+    let merchant = sqlx::query_as::<_, (f64, f64)>(
+        "SELECT dispatch_latitude, dispatch_longitude FROM merchants WHERE id = $1"
     )
+    .bind(merchant_id)
     .fetch_one(pool)
     .await?;
+
+    let (dispatch_lat, dispatch_lon) = merchant;
 
     // Calculate distance
     let distance_km = pricing_service::calculate_distance(
-        merchant.dispatch_latitude,
-        merchant.dispatch_longitude,
-        address.latitude,
-        address.longitude,
+        dispatch_lat,
+        dispatch_lon,
+        lat,
+        lon,
     );
 
     // Calculate cost
@@ -299,19 +306,21 @@ pub async fn get_delivery_timeline(
     pool: &PgPool,
     delivery_id: Uuid,
 ) -> Result<Vec<DeliveryTimelineEvent>, sqlx::Error> {
-    let delivery = sqlx::query!(
-        "SELECT status, created_at, assigned_at, picked_up_at, delivered_at FROM deliveries WHERE id = $1",
-        delivery_id
+    let delivery = sqlx::query_as::<_, (String, chrono::DateTime<chrono::Utc>, Option<chrono::DateTime<chrono::Utc>>, Option<chrono::DateTime<chrono::Utc>>, Option<chrono::DateTime<chrono::Utc>>)>(
+        "SELECT status, created_at, assigned_at, picked_up_at, delivered_at FROM deliveries WHERE id = $1"
     )
+    .bind(delivery_id)
     .fetch_one(pool)
     .await?;
+
+    let (status, created_at, assigned_at, picked_up_at, delivered_at) = delivery;
 
     let mut timeline = Vec::new();
 
     // Created event
     timeline.push(DeliveryTimelineEvent {
         status: "Created".to_string(),
-        timestamp: delivery.created_at,
+        timestamp: created_at,
         description: "Delivery request created".to_string(),
         completed: true,
     });
@@ -319,38 +328,38 @@ pub async fn get_delivery_timeline(
     // Awaiting Assignment
     timeline.push(DeliveryTimelineEvent {
         status: "Awaiting Assignment".to_string(),
-        timestamp: delivery.created_at,
+        timestamp: created_at,
         description: "Waiting for rider assignment".to_string(),
-        completed: matches!(delivery.status.as_str(), "awaiting_assignment" | "assigned" | "in_transit" | "delivered"),
+        completed: matches!(status.as_str(), "awaiting_assignment" | "assigned" | "in_transit" | "delivered"),
     });
 
     // Assigned
-    if let Some(assigned_at) = delivery.assigned_at {
+    if let Some(assigned_at) = assigned_at {
         timeline.push(DeliveryTimelineEvent {
             status: "Assigned".to_string(),
             timestamp: assigned_at,
             description: "Rider assigned to delivery".to_string(),
-            completed: matches!(delivery.status.as_str(), "assigned" | "in_transit" | "delivered"),
+            completed: matches!(status.as_str(), "assigned" | "in_transit" | "delivered"),
         });
     }
 
     // In Transit
-    if let Some(picked_up_at) = delivery.picked_up_at {
+    if let Some(picked_up_at) = picked_up_at {
         timeline.push(DeliveryTimelineEvent {
             status: "In Transit".to_string(),
             timestamp: picked_up_at,
             description: "Package picked up, in transit".to_string(),
-            completed: matches!(delivery.status.as_str(), "in_transit" | "delivered"),
+            completed: matches!(status.as_str(), "in_transit" | "delivered"),
         });
     }
 
     // Delivered
-    if let Some(delivered_at) = delivery.delivered_at {
+    if let Some(delivered_at) = delivered_at {
         timeline.push(DeliveryTimelineEvent {
             status: "Delivered".to_string(),
             timestamp: delivered_at,
             description: "Package delivered successfully".to_string(),
-            completed: matches!(delivery.status.as_str(), "delivered"),
+            completed: matches!(status.as_str(), "delivered"),
         });
     }
 

@@ -1,7 +1,6 @@
 use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
-use crate::models::Merchant;
 use crate::services::merchant_service;
 use crate::utils::response::{ApiResponse, ApiError};
 

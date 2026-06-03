@@ -25,6 +25,7 @@ pub struct AddressSearchResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct AddressAutocompleteRequest {
     pub query: String,
     pub limit: Option<i32>,
@@ -36,6 +37,7 @@ pub struct AddressAutocompleteResponse {
 }
 
 impl Address {
+    #[allow(dead_code)]
     pub fn new(address_text: String, latitude: f64, longitude: f64, area: Option<String>) -> Self {
         Self {
             id: Uuid::new_v4(),

@@ -104,6 +104,7 @@ impl From<&str> for PaymentMethod {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum FailureReason {
     CustomerUnavailable,
     WrongAddress,
@@ -147,6 +148,7 @@ impl From<String> for FailureReason {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum PaymentStatus {
     Pending,
     Completed,

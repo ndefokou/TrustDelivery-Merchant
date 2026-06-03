@@ -2,12 +2,8 @@ use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
-use crate::models::{
-    CreateDeliveryRequest, Delivery, DeliveryListResponse, DeliveryStats,
-    DeliveryTimelineEvent, DeliveryStatus, DeliveryCostCalculation,
-};
-use crate::models::payment::PaymentMethod;
-use crate::services::{delivery_service, pricing_service};
+use crate::models::{CreateDeliveryRequest, DeliveryStatus};
+use crate::services::delivery_service;
 use crate::utils::response::{ApiResponse, ApiError};
 
 pub async fn get_deliveries(

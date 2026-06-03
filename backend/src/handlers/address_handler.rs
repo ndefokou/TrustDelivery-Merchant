@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 use sqlx::PgPool;
-use crate::models::{AddressSearchResult, AddressAutocompleteResponse};
+use crate::models::AddressAutocompleteResponse;
 use crate::services::address_service;
 use crate::utils::response::{ApiResponse, ApiError};
 
