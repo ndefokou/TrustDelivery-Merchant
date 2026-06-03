@@ -8,7 +8,7 @@ interface PublicRouteProps {
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const { isAuthenticated, isActive, loading, user } = useAuth();
+  const { isAuthenticated, isActive, loading } = useAuth();
 
   if (loading) {
     return (

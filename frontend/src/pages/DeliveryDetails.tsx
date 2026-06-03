@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  Package, 
-  User, 
-  Phone, 
-  MapPin, 
+import {
+  Package,
+  User,
+  Phone,
+  MapPin,
   Clock,
   CheckCircle,
   XCircle,
-  Truck,
   ArrowLeft,
-  Calendar,
   CreditCard,
   Loader2
 } from 'lucide-react';
@@ -25,13 +23,7 @@ const DeliveryDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetchDelivery();
-    }
-  }, [id]);
-
-  const fetchDelivery = async () => {
+  const fetchDelivery = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -42,7 +34,13 @@ const DeliveryDetails: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchDelivery();
+    }
+  }, [id, fetchDelivery]);
 
   if (loading) {
     return (

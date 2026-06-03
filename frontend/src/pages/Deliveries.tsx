@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Filter, Loader2 } from 'lucide-react';
+import { Search, Plus, Loader2 } from 'lucide-react';
 import { Delivery, DeliveryStatus } from '../types';
 import { getDeliveries } from '../services/api';
 
@@ -21,11 +21,7 @@ const Deliveries: React.FC = () => {
     { label: 'Failed', value: 'failed' },
   ];
 
-  useEffect(() => {
-    fetchDeliveries();
-  }, [activeFilter]);
-
-  const fetchDeliveries = async () => {
+  const fetchDeliveries = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -40,7 +36,11 @@ const Deliveries: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter]);
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, [fetchDeliveries]);
 
   const getStatusBadge = (status: DeliveryStatus) => {
     const styles = {

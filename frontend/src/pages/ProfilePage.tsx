@@ -19,7 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [profile, setProfile] = useState<Merchant | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState<Partial<Merchant>>({});

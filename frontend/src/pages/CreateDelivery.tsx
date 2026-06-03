@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
@@ -59,14 +59,7 @@ const CreateDelivery: React.FC = () => {
     return () => clearTimeout(searchTimeout);
   }, [addressQuery]);
 
-  // Calculate cost when address is selected
-  useEffect(() => {
-    if (selectedAddress?.id) {
-      calculateCost(selectedAddress.id);
-    }
-  }, [selectedAddress]);
-
-  const calculateCost = async (addressId: string) => {
+  const calculateCost = useCallback(async (addressId: string) => {
     try {
       const cost = await calculateDeliveryCost(addressId);
       setCalculatedCost(cost);
@@ -80,7 +73,14 @@ const CreateDelivery: React.FC = () => {
         currency: 'FCFA'
       });
     }
-  };
+  }, []);
+
+  // Calculate cost when address is selected
+  useEffect(() => {
+    if (selectedAddress?.id) {
+      calculateCost(selectedAddress.id);
+    }
+  }, [selectedAddress, calculateCost]);
 
   const calculateCostFromDistance = (distance: number): number => {
     if (distance <= 3) return 1000;

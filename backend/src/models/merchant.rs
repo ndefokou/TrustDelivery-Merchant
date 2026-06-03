@@ -13,17 +13,6 @@ pub enum MerchantStatus {
     Rejected,
 }
 
-impl MerchantStatus {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            MerchantStatus::PendingApproval => "pending_approval",
-            MerchantStatus::Active => "active",
-            MerchantStatus::Suspended => "suspended",
-            MerchantStatus::Rejected => "rejected",
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type, PartialEq)]
 #[sqlx(type_name = "business_type", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
@@ -36,21 +25,6 @@ pub enum BusinessType {
     HomeAppliances,
     GeneralMerchandise,
     Other,
-}
-
-impl BusinessType {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            BusinessType::Electronics => "electronics",
-            BusinessType::Fashion => "fashion",
-            BusinessType::Beauty => "beauty",
-            BusinessType::Pharmacy => "pharmacy",
-            BusinessType::Food => "food",
-            BusinessType::HomeAppliances => "home_appliances",
-            BusinessType::GeneralMerchandise => "general_merchandise",
-            BusinessType::Other => "other",
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
