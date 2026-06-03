@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
+import Deliveries from './pages/Deliveries';
 import CreateDelivery from './pages/CreateDelivery';
 import DeliveryDetails from './pages/DeliveryDetails';
 import Layout from './components/Layout';
@@ -11,6 +12,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/create-delivery" element={<CreateDelivery />} />
           <Route path="/delivery/:id" element={<DeliveryDetails />} />
         </Routes>
