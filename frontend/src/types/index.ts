@@ -112,17 +112,82 @@ export interface DeliveryCostCalculation {
   currency: string;
 }
 
+export type MerchantStatus = 'pending_approval' | 'active' | 'suspended' | 'rejected';
+
+export type BusinessType =
+  | 'electronics'
+  | 'fashion'
+  | 'beauty'
+  | 'pharmacy'
+  | 'food'
+  | 'home_appliances'
+  | 'general_merchandise'
+  | 'other';
+
+export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
+  electronics: 'Electronics',
+  fashion: 'Fashion',
+  beauty: 'Beauty',
+  pharmacy: 'Pharmacy',
+  food: 'Food',
+  home_appliances: 'Home Appliances',
+  general_merchandise: 'General Merchandise',
+  other: 'Other',
+};
+
+export const MERCHANT_STATUS_LABELS: Record<MerchantStatus, string> = {
+  pending_approval: 'Pending Approval',
+  active: 'Active',
+  suspended: 'Suspended',
+  rejected: 'Rejected',
+};
+
 export interface Merchant {
   id: string;
   email: string;
   business_name: string;
-  phone: string;
-  address: string;
+  business_type: BusinessType;
+  business_address: string;
+  business_phone: string;
+  business_email: string | null;
+  owner_name: string;
+  owner_phone: string;
+  national_id: string | null;
+  status: MerchantStatus;
   dispatch_latitude: number;
   dispatch_longitude: number;
   wallet_balance: number;
   created_at: string;
   updated_at: string;
+}
+
+// Auth types
+export interface RegisterRequest {
+  // Step 1: Business Information
+  business_name: string;
+  business_type: string;
+  business_address: string;
+  business_phone: string;
+  business_email?: string;
+  // Step 2: Owner Information
+  owner_name: string;
+  owner_phone: string;
+  national_id?: string;
+  // Step 3: Security
+  email: string;
+  password: string;
+  // Step 4: Terms
+  accept_terms: boolean;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  merchant: Merchant;
 }
 
 export const formatDeliveryStatus = (status: DeliveryStatus): string => {

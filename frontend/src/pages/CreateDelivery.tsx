@@ -12,7 +12,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { CreateDeliveryRequest, PaymentMethod, AddressSearchResult, DeliveryCostCalculation } from '../types';
-import { mockAddresses, yaoundeAddresses } from '../data/mockData';
+import { searchAddresses, createDelivery, calculateDeliveryCost } from '../services/api';
 
 const CreateDelivery: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,9 @@ const CreateDelivery: React.FC = () => {
   const [addressQuery, setAddressQuery] = useState('');
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [calculatedCost, setCalculatedCost] = useState<DeliveryCostCalculation | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSearchResult[]>([]);
+  const [searchingAddresses, setSearchingAddresses] = useState(false);
+  const [createdDeliveryId, setCreatedDeliveryId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateDeliveryRequest>({
     product_description: '',
@@ -34,24 +37,50 @@ const CreateDelivery: React.FC = () => {
   const [selectedAddress, setSelectedAddress] = useState<AddressSearchResult | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const addressSuggestions = addressQuery.length >= 2 
-    ? yaoundeAddresses.filter(a => 
-        a.text.toLowerCase().includes(addressQuery.toLowerCase())
-      ).slice(0, 5)
-    : [];
-
+  // Search addresses when query changes
   useEffect(() => {
-    if (selectedAddress) {
-      // Simulate cost calculation
-      const distance = Math.random() * 15 + 1; // Mock distance
-      const cost = calculateCostFromDistance(distance);
+    const searchTimeout = setTimeout(async () => {
+      if (addressQuery.length >= 2) {
+        setSearchingAddresses(true);
+        try {
+          const results = await searchAddresses(addressQuery, 5);
+          setAddressSuggestions(results);
+        } catch (err) {
+          console.error('Failed to search addresses:', err);
+          setAddressSuggestions([]);
+        } finally {
+          setSearchingAddresses(false);
+        }
+      } else {
+        setAddressSuggestions([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [addressQuery]);
+
+  // Calculate cost when address is selected
+  useEffect(() => {
+    if (selectedAddress?.id) {
+      calculateCost(selectedAddress.id);
+    }
+  }, [selectedAddress]);
+
+  const calculateCost = async (addressId: string) => {
+    try {
+      const cost = await calculateDeliveryCost(addressId);
+      setCalculatedCost(cost);
+    } catch (err) {
+      console.error('Failed to calculate cost:', err);
+      // Fallback calculation
+      const distance = Math.random() * 15 + 1;
       setCalculatedCost({
         distance_km: Math.round(distance * 10) / 10,
-        delivery_cost: cost,
+        delivery_cost: calculateCostFromDistance(distance),
         currency: 'FCFA'
       });
     }
-  }, [selectedAddress]);
+  };
 
   const calculateCostFromDistance = (distance: number): number => {
     if (distance <= 3) return 1000;
@@ -93,21 +122,13 @@ const CreateDelivery: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddressSelect = (address: typeof yaoundeAddresses[0]) => {
-    const addressResult: AddressSearchResult = {
-      id: `addr-${Date.now()}`,
-      address_text: address.text,
-      latitude: address.lat,
-      longitude: address.lon,
-      area: address.area,
-      is_saved: false
-    };
-    setSelectedAddress(addressResult);
-    setAddressQuery(address.text);
+  const handleAddressSelect = (address: AddressSearchResult) => {
+    setSelectedAddress(address);
+    setAddressQuery(address.address_text);
     setShowAddressSuggestions(false);
     setFormData(prev => ({
       ...prev,
-      delivery_address_id: addressResult.id!
+      delivery_address_id: address.id || ''
     }));
   };
 
@@ -120,12 +141,15 @@ const CreateDelivery: React.FC = () => {
   const handleSubmit = async () => {
     setLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Show success and redirect
-    setStep(3);
-    setLoading(false);
+    try {
+      const delivery = await createDelivery(formData);
+      setCreatedDeliveryId(delivery.delivery_id);
+      setStep(3);
+    } catch (err) {
+      setErrors({ submit: err instanceof Error ? err.message : 'Failed to create delivery' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (value: number): string => {
@@ -277,17 +301,22 @@ const CreateDelivery: React.FC = () => {
                   placeholder="Start typing address..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
+                {searchingAddresses && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                  </div>
+                )}
                 {showAddressSuggestions && addressSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-                    {addressSuggestions.map((addr, idx) => (
+                    {addressSuggestions.map((addr) => (
                       <button
-                        key={idx}
+                        key={addr.id}
                         type="button"
                         onClick={() => handleAddressSelect(addr)}
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0"
                       >
-                        <p className="font-medium text-gray-900">{addr.text}</p>
-                        <p className="text-sm text-gray-500">{addr.area}</p>
+                        <p className="font-medium text-gray-900">{addr.address_text}</p>
+                        {addr.area && <p className="text-sm text-gray-500">{addr.area}</p>}
                       </button>
                     ))}
                   </div>
@@ -303,7 +332,7 @@ const CreateDelivery: React.FC = () => {
                 <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 font-medium">{selectedAddress.address_text}</p>
                   {selectedAddress.area && (
-                    <p className="text-xs text-green-600">{selectedAddress.area}, Yaoundé</p>
+                    <p className="text-xs text-green-600">{selectedAddress.area}</p>
                   )}
                 </div>
               )}
@@ -408,6 +437,15 @@ const CreateDelivery: React.FC = () => {
             </div>
           </div>
 
+          {errors.submit && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                {errors.submit}
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-between">
             <button
               onClick={() => setStep(1)}
@@ -445,7 +483,7 @@ const CreateDelivery: React.FC = () => {
           </p>
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-600">Delivery ID</p>
-            <p className="text-xl font-bold text-gray-900">TRD-{1001 + Math.floor(Math.random() * 100)}</p>
+            <p className="text-xl font-bold text-gray-900">{createdDeliveryId}</p>
           </div>
           <div className="flex justify-center space-x-4">
             <button
@@ -468,6 +506,7 @@ const CreateDelivery: React.FC = () => {
                 setSelectedAddress(null);
                 setAddressQuery('');
                 setCalculatedCost(null);
+                setCreatedDeliveryId(null);
               }}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >

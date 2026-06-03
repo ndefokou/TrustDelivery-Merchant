@@ -6,6 +6,7 @@ use sqlx::postgres::PgPoolOptions;
 mod config;
 mod db;
 mod handlers;
+mod middleware;
 mod models;
 mod services;
 mod utils;
@@ -31,11 +32,14 @@ async fn main() -> std::io::Result<()> {
     // Run migrations
     db::migrations::run_migrations(&pool).await.expect("Failed to run migrations");
 
+    let config_data = web::Data::new(config.clone());
+
     HttpServer::new(move || {
         let cors = Cors::permissive();
         
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .app_data(config_data.clone())
             .wrap(cors)
             .configure(handlers::routes::configure)
     })

@@ -4,8 +4,9 @@ use sqlx::FromRow;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "delivery_status", rename_all = "snake_case")]
 pub enum DeliveryStatus {
     AwaitingAssignment,
     Assigned,
@@ -59,8 +60,9 @@ impl From<&str> for DeliveryStatus {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "payment_method", rename_all = "snake_case")]
 pub enum PaymentMethod {
     OrangeMoney,
     MtnMomo,
@@ -102,8 +104,9 @@ impl From<&str> for PaymentMethod {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "failure_reason", rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum FailureReason {
     CustomerUnavailable,
@@ -146,8 +149,9 @@ impl From<String> for FailureReason {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "payment_status", rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum PaymentStatus {
     Pending,
@@ -219,16 +223,16 @@ pub struct Delivery {
     pub delivery_address_text: String,
     pub distance_km: f64,
     pub delivery_cost: i64,
-    pub status: String,
-    pub payment_method: String,
-    pub payment_status: String,
+    pub status: DeliveryStatus,
+    pub payment_method: PaymentMethod,
+    pub payment_status: PaymentStatus,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub assigned_rider_id: Option<Uuid>,
     pub assigned_at: Option<DateTime<Utc>>,
     pub picked_up_at: Option<DateTime<Utc>>,
     pub delivered_at: Option<DateTime<Utc>>,
-    pub failure_reason: Option<String>,
+    pub failure_reason: Option<FailureReason>,
     pub rider_notes: Option<String>,
     pub otp_code: Option<String>,
     pub otp_verified: bool,

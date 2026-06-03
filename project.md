@@ -575,4 +575,308 @@ Every delivery has:
 
 This creates transparency, trust, and operational control for businesses in Yaoundé while giving your company a scalable logistics service that can grow city by city.
 
+You're right. We defined the delivery flow but not how a merchant joins the platform.
+
+Since TrustDelivery is a delivery company and not just a software platform, merchant registration should collect enough information for you to:
+
+* Identify the business
+* Verify the business owner
+* Contact them
+* Generate invoices and payments
+* Reduce fraud
+
+I would make the registration process very simple for MVP.
+
+## Merchant Registration Flow
+
+### Step 1: Basic Information
+
+#### Business Name
+
+```text
+Arthur Electronics
+```
+
+Required.
+
+---
+
+#### Business Type
+
+Dropdown:
+
+```text
+Electronics
+Fashion
+Beauty
+Pharmacy
+Food
+Home Appliances
+General Merchandise
+Other
+```
+
+Required.
+
+---
+
+#### Business Address
+
+Example:
+
+```text
+Mvog-Ada, Yaoundé
+```
+
+Required.
+
+---
+
+#### Business Phone Number
+
+Example:
+
+```text
+677123456
+```
+
+Required.
+
+---
+
+#### Business Email
+
+Example:
+
+```text
+contact@arthurelectronics.com
+```
+
+Optional for MVP but recommended.
+
+---
+
+### Step 2: Owner Information
+
+#### Owner Full Name
+
+Example:
+
+```text
+Arthur Tcheutchoua
+```
+
+Required.
+
+---
+
+#### Owner Phone Number
+
+Example:
+
+```text
+678123456
+```
+
+Required.
+
+---
+
+#### National ID Number (Optional MVP)
+
+Can be added later.
+
+This helps verify merchants and reduce fraud.
+
+---
+
+### Step 3: Security
+
+#### Password
+
+Rules:
+
+* Minimum 8 characters
+* One uppercase
+* One number
+
+---
+
+#### Confirm Password
+
+Must match.
+
+---
+
+### Step 4: Accept Terms
+
+Checkbox:
+
+```text
+I agree to TrustDelivery's terms and conditions.
+```
+
+Required.
+
+---
+
+# Registration Approval
+
+This is where many startups make a mistake.
+
+I do NOT recommend automatically activating merchant accounts.
+
+Instead:
+
+### Merchant Creates Account
+
+Status:
+
+```text
+Pending Approval
+```
+
+Administrator receives notification.
+
+---
+
+### Administrator Reviews Merchant
+
+Administrator sees:
+
+```text
+Business Name
+Owner Name
+Phone Number
+Business Type
+Address
+```
+
+Administrator can:
+
+```text
+Approve
+Reject
+```
+
+---
+
+### After Approval
+
+Merchant receives:
+
+```text
+Welcome to TrustDelivery.
+
+Your account has been approved.
+```
+
+Status:
+
+```text
+Active
+```
+
+Now they can create deliveries.
+
+---
+
+# Merchant Entity
+
+The merchant table would look like:
+
+```text
+Merchant
+
+id
+business_name
+business_type
+business_address
+business_phone
+business_email
+
+owner_name
+owner_phone
+
+status
+
+created_at
+updated_at
+```
+
+---
+
+# Merchant Statuses
+
+```text
+Pending Approval
+Active
+Suspended
+Rejected
+```
+
+---
+
+# Merchant Wallet (Future)
+
+I would also prepare the registration model for future wallet support.
+
+```text
+wallet_balance
+```
+
+Example:
+
+```text
+25,000 FCFA
+```
+
+The merchant can recharge using:
+
+* Orange Money
+* MTN MoMo
+
+And deliveries are deducted automatically.
+
+---
+
+# Recommended Registration Screen
+
+A clean two-step wizard:
+
+### Step 1 — Business Information
+
+```text
+Business Name
+Business Type
+Business Address
+Business Phone
+Business Email
+```
+
+### Step 2 — Owner Information
+
+```text
+Owner Full Name
+Owner Phone Number
+Password
+Confirm Password
+```
+
+Button:
+
+```text
+Create Account
+```
+
+After submission:
+
+```text
+Account Created Successfully
+
+Your account is awaiting approval by TrustDelivery.
+```
+
+This is simple enough for small WhatsApp sellers while still giving you enough information to manage merchants professionally.
+
 DB-pw=4vsVJ/82VYk_5Ny

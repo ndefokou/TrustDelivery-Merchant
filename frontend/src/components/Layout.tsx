@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard,
   Package,
@@ -7,8 +7,11 @@ import {
   Wallet,
   Menu,
   X,
-  Truck
+  Truck,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { MERCHANT_STATUS_LABELS } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +19,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const navigation = [
@@ -25,6 +30,49 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/welcome', { replace: true });
+  };
+
+  // Get user initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const displayName = user?.business_name || 'Merchant';
+  const initials = getInitials(displayName);
+
+  const getStatusBadgeClasses = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'pending_approval':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'suspended':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'rejected':
+        return 'bg-red-50 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getStatusDotClasses = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-emerald-500';
+      case 'pending_approval': return 'bg-amber-500';
+      case 'suspended': return 'bg-red-500';
+      case 'rejected': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -96,13 +144,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* User Profile */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-              <span className="text-sm font-bold text-white">EM</span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-white">Electroshop Mvog-Mbi</p>
-              <p className="text-xs text-slate-400">Pro merchant</p>
-            </div>
+            <Link
+              to="/profile"
+              className="flex items-center space-x-3 flex-1 min-w-0 hover:bg-slate-800 rounded-lg p-1 -m-1 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-white">{initials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{displayName}</p>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotClasses(user?.status || 'active')}`} />
+                  <p className="text-xs text-slate-400">{MERCHANT_STATUS_LABELS[user?.status || 'active']}</p>
+                </div>
+              </div>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-md hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors flex-shrink-0"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -129,6 +192,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="hidden sm:inline-block text-sm text-gray-600">
                 Yaoundé, Cameroon
               </span>
+              {/* Status badge in top bar */}
+              {user?.status && user.status !== 'active' && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadgeClasses(user.status)}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${getStatusDotClasses(user.status)}`} />
+                  {MERCHANT_STATUS_LABELS[user.status]}
+                </span>
+              )}
             </div>
           </div>
         </header>

@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Filter } from 'lucide-react';
+import { Search, Plus, Filter, Loader2 } from 'lucide-react';
 import { Delivery, DeliveryStatus } from '../types';
-import { mockDeliveries } from '../data/mockData';
+import { getDeliveries } from '../services/api';
 
 const Deliveries: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<DeliveryStatus | 'all'>('all');
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   const filters: { label: string; value: DeliveryStatus | 'all' }[] = [
     { label: 'All', value: 'all' },
@@ -16,6 +20,27 @@ const Deliveries: React.FC = () => {
     { label: 'Delivered', value: 'delivered' },
     { label: 'Failed', value: 'failed' },
   ];
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, [activeFilter]);
+
+  const fetchDeliveries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const status = activeFilter === 'all' ? undefined : activeFilter;
+      const response = await getDeliveries(status, 1, 100);
+      
+      setDeliveries(response.deliveries);
+      setTotalCount(response.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch deliveries');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: DeliveryStatus) => {
     const styles = {
@@ -50,16 +75,37 @@ const Deliveries: React.FC = () => {
     );
   };
 
-  const filteredDeliveries = mockDeliveries.filter((delivery) => {
-    const matchesFilter = activeFilter === 'all' || delivery.status === activeFilter;
+  const filteredDeliveries = deliveries.filter((delivery) => {
     const matchesSearch = 
       searchQuery === '' ||
       delivery.delivery_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.product_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.delivery_address_text.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    return matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">{error}</p>
+        <button 
+          onClick={fetchDeliveries}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,7 +114,7 @@ const Deliveries: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {filteredDeliveries.length} of {mockDeliveries.length} deliveries
+            {filteredDeliveries.length} of {totalCount} deliveries
           </p>
         </div>
         <Link
@@ -199,10 +245,10 @@ const Deliveries: React.FC = () => {
             </tbody>
           </table>
         </div>
-
+        
         {filteredDeliveries.length === 0 && (
-          <div className="px-6 py-12 text-center">
-            <p className="text-gray-500">No deliveries found matching your criteria.</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">No deliveries found</p>
           </div>
         )}
       </div>

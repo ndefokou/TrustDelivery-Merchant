@@ -172,12 +172,12 @@ pub async fn create_delivery(
             customer_name, customer_phone, delivery_address_id, delivery_address_text,
             distance_km, delivery_cost, status, payment_method, payment_status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'awaiting_assignment', $12, 'pending')
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'awaiting_assignment', $12::payment_method, 'pending')
         RETURNING id, delivery_id, merchant_id, product_description, product_value, currency,
                   customer_name, customer_phone, delivery_address_id, delivery_address_text,
-                  distance_km, delivery_cost, status, payment_method, payment_status, created_at, 
-                  updated_at, assigned_rider_id, assigned_at, picked_up_at, delivered_at, 
-                  failure_reason, rider_notes, otp_code, otp_verified, delivery_photo_url, 
+                  distance_km, delivery_cost, status, payment_method, payment_status, created_at,
+                  updated_at, assigned_rider_id, assigned_at, picked_up_at, delivered_at,
+                  failure_reason, rider_notes, otp_code, otp_verified, delivery_photo_url,
                   delivery_gps_coordinates
         "#
     )
@@ -239,7 +239,7 @@ pub async fn get_delivery_stats(
     .await?;
 
     let total_spending: i64 = sqlx::query_scalar(
-        "SELECT COALESCE(SUM(delivery_cost), 0) FROM deliveries WHERE merchant_id = $1 AND payment_status = 'completed'"
+        "SELECT COALESCE(CAST(SUM(delivery_cost) AS BIGINT), 0) FROM deliveries WHERE merchant_id = $1 AND payment_status = 'completed'"
     )
     .bind(merchant_id)
     .fetch_one(pool)

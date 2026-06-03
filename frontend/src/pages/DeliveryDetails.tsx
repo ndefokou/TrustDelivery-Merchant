@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Package, 
@@ -11,15 +11,64 @@ import {
   Truck,
   ArrowLeft,
   Calendar,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
-import { mockDeliveries } from '../data/mockData';
+import { Delivery, DeliveryTimelineEvent } from '../types';
 import { formatDeliveryStatus, getStatusColor, formatPaymentMethod, formatFailureReason } from '../types';
+import { getDeliveryById } from '../services/api';
 import { format } from 'date-fns';
 
 const DeliveryDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const delivery = mockDeliveries.find(d => d.id === id);
+  const [delivery, setDelivery] = useState<Delivery | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (id) {
+      fetchDelivery();
+    }
+  }, [id]);
+
+  const fetchDelivery = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getDeliveryById(id!);
+      setDelivery(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch delivery details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Error loading delivery</h2>
+        <p className="text-red-600 mb-4">{error}</p>
+        <button 
+          onClick={fetchDelivery}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 mr-2"
+        >
+          Retry
+        </button>
+        <Link to="/" className="inline-block px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+          ← Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   if (!delivery) {
     return (
@@ -32,7 +81,7 @@ const DeliveryDetails: React.FC = () => {
     );
   }
 
-  const timeline = [
+  const timeline: DeliveryTimelineEvent[] = [
     {
       status: 'Created',
       timestamp: delivery.created_at,
@@ -47,19 +96,19 @@ const DeliveryDetails: React.FC = () => {
     },
     {
       status: 'Assigned',
-      timestamp: delivery.assigned_at,
+      timestamp: delivery.assigned_at || '',
       description: 'Rider assigned to delivery',
       completed: ['in_transit', 'delivered'].includes(delivery.status)
     },
     {
       status: 'In Transit',
-      timestamp: delivery.picked_up_at,
+      timestamp: delivery.picked_up_at || '',
       description: 'Package picked up, in transit',
       completed: delivery.status === 'delivered'
     },
     {
       status: 'Delivered',
-      timestamp: delivery.delivered_at,
+      timestamp: delivery.delivered_at || '',
       description: 'Package delivered successfully',
       completed: delivery.status === 'delivered'
     }
@@ -198,26 +247,24 @@ const DeliveryDetails: React.FC = () => {
                   <CheckCircle className="w-5 h-5 text-green-600" />
                   <span className="ml-2 text-green-800">OTP Verified Successfully</span>
                 </div>
-                {delivery.delivered_at && (
-                  <div className="flex items-center">
-                    <Calendar className="w-5 h-5 text-green-600" />
-                    <span className="ml-2 text-green-800">
-                      Delivered: {format(new Date(delivery.delivered_at), 'MMM d, yyyy HH:mm')}
-                    </span>
+                {delivery.delivery_photo_url && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-green-900 mb-2">Delivery Photo:</p>
+                    <img 
+                      src={delivery.delivery_photo_url} 
+                      alt="Delivery proof" 
+                      className="rounded-lg max-w-md"
+                    />
                   </div>
                 )}
                 {delivery.delivery_gps_coordinates && (
                   <div className="flex items-center">
                     <MapPin className="w-5 h-5 text-green-600" />
-                    <span className="ml-2 text-green-800">GPS: {delivery.delivery_gps_coordinates}</span>
+                    <span className="ml-2 text-green-800">
+                      GPS: {delivery.delivery_gps_coordinates}
+                    </span>
                   </div>
                 )}
-                <div className="mt-4 p-4 bg-white rounded-lg border border-green-200">
-                  <p className="text-sm text-gray-600">Delivery Photo</p>
-                  <div className="mt-2 h-40 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400">Photo placeholder</span>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -225,45 +272,58 @@ const DeliveryDetails: React.FC = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Cost Summary */}
+          {/* Payment Info */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Cost Summary</h2>
-            <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment</h2>
+            <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Distance</span>
-                <span className="font-medium">{delivery.distance_km} km</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Cost</span>
-                <span className="font-medium">{delivery.delivery_cost.toLocaleString()} FCFA</span>
-              </div>
-              <hr />
-              <div className="flex justify-between">
-                <span className="text-gray-600">Payment Method</span>
+                <span className="text-gray-500">Method</span>
                 <span className="font-medium">{formatPaymentMethod(delivery.payment_method)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Payment Status</span>
-                <span className={`font-medium ${delivery.payment_status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>
+                <span className="text-gray-500">Status</span>
+                <span className={`font-medium ${
+                  delivery.payment_status === 'completed' ? 'text-green-600' : 
+                  delivery.payment_status === 'failed' ? 'text-red-600' : 'text-amber-600'
+                }`}>
                   {delivery.payment_status.charAt(0).toUpperCase() + delivery.payment_status.slice(1)}
                 </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Delivery Cost</span>
+                <span className="font-medium">{delivery.delivery_cost.toLocaleString()} {delivery.currency}</span>
+              </div>
+              <div className="flex justify-between border-t pt-4">
+                <span className="text-gray-900 font-medium">Total</span>
+                <span className="text-gray-900 font-bold">{delivery.delivery_cost.toLocaleString()} {delivery.currency}</span>
               </div>
             </div>
           </div>
 
-          {/* Created Date */}
+          {/* Delivery Info */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Created</h2>
-            <div className="flex items-center">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <div className="ml-3">
-                <p className="font-medium text-gray-900">
-                  {format(new Date(delivery.created_at), 'MMMM d, yyyy')}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {format(new Date(delivery.created_at), 'HH:mm')}
-                </p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Info</h2>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Distance</span>
+                <span className="font-medium">{delivery.distance_km.toFixed(1)} km</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Created</span>
+                <span className="font-medium">{format(new Date(delivery.created_at), 'MMM d, yyyy')}</span>
+              </div>
+              {delivery.assigned_at && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Assigned</span>
+                  <span className="font-medium">{format(new Date(delivery.assigned_at), 'MMM d, yyyy HH:mm')}</span>
+                </div>
+              )}
+              {delivery.otp_code && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">OTP Code</span>
+                  <span className="font-medium font-mono">{delivery.otp_code}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
