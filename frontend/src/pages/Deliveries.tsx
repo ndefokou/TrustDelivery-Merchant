@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Loader2 } from 'lucide-react';
+import { Search, Plus, Loader2, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Delivery, DeliveryStatus } from '../types';
 import { getDeliveries } from '../services/api';
 
@@ -11,10 +11,11 @@ const Deliveries: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   const filters: { label: string; value: DeliveryStatus | 'all' }[] = [
     { label: 'All', value: 'all' },
-    { label: 'Awaiting Assignment', value: 'awaiting_assignment' },
+    { label: 'Awaiting', value: 'awaiting_assignment' },
     { label: 'Assigned', value: 'assigned' },
     { label: 'In Transit', value: 'in_transit' },
     { label: 'Delivered', value: 'delivered' },
@@ -60,7 +61,7 @@ const Deliveries: React.FC = () => {
     };
 
     const labels = {
-      awaiting_assignment: 'Awaiting Assignment',
+      awaiting_assignment: 'Awaiting',
       assigned: 'Assigned',
       in_transit: 'In Transit',
       delivered: 'Delivered',
@@ -68,8 +69,8 @@ const Deliveries: React.FC = () => {
     };
 
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styles[status]}`}>
-        <span className={`w-2 h-2 rounded-full mr-2 ${dotColors[status]}`} />
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium border ${styles[status]}`}>
+        <span className={`w-1.5 h-1.5 rounded-full mr-1 ${dotColors[status]}`} />
         {labels[status]}
       </span>
     );
@@ -96,10 +97,10 @@ const Deliveries: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-red-600 mb-4 text-sm">{error}</p>
         <button 
           onClick={fetchDeliveries}
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+          className="px-5 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors text-sm font-medium"
         >
           Retry
         </button>
@@ -108,49 +109,58 @@ const Deliveries: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
-          <p className="mt-1 text-sm text-gray-500">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Deliveries</h1>
+          <p className="mt-0.5 text-sm text-gray-500">
             {filteredDeliveries.length} of {totalCount} deliveries
           </p>
         </div>
         <Link
           to="/create-delivery"
-          className="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+          className="inline-flex items-center px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 font-medium text-sm shadow-sm flex-shrink-0 min-h-touch"
         >
-          <Plus className="w-5 h-5 mr-2" />
-          New delivery
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" />
+          <span className="hidden sm:inline">New delivery</span>
+          <span className="sm:hidden">New</span>
         </Link>
       </div>
 
       {/* Search and Filters */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="space-y-3">
+        <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by ID, customer, product, address..."
+              placeholder="Search deliveries..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="mobile-input !pl-10 !py-2.5 text-sm"
             />
           </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`lg:hidden p-2.5 rounded-xl border transition-colors min-h-touch min-w-touch flex items-center justify-center ${
+              showFilters ? 'bg-orange-50 border-orange-200 text-orange-500' : 'bg-white border-gray-200 text-gray-500'
+            }`}
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap gap-2">
+        {/* Filter Tabs - Always visible on desktop, toggleable on mobile */}
+        <div className={`flex-wrap gap-2 ${showFilters ? 'flex' : 'hidden lg:flex'}`}>
           {filters.map((filter) => (
             <button
               key={filter.value}
               onClick={() => setActiveFilter(filter.value)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 min-h-touch ${
                 activeFilter === filter.value
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 active:bg-gray-100'
               }`}
             >
               {filter.label}
@@ -159,41 +169,69 @@ const Deliveries: React.FC = () => {
         </div>
       </div>
 
-      {/* Deliveries Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Deliveries List */}
+      <div className="mobile-card !p-0 overflow-hidden">
+        {/* Mobile: Card list */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {filteredDeliveries.map((delivery) => (
+            <Link
+              key={delivery.id}
+              to={`/delivery/${delivery.id}`}
+              className="flex items-center gap-3 px-4 py-3.5 active:bg-gray-50 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-900">{delivery.delivery_id}</span>
+                  {getStatusBadge(delivery.status)}
+                </div>
+                <p className="text-sm text-gray-700 truncate">{delivery.product_description}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-xs text-gray-500">{delivery.customer_name}</span>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-xs text-gray-500">{delivery.distance_km.toFixed(1)} km</span>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-xs font-medium text-gray-700">{delivery.delivery_cost.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop: Table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50/50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Product
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Address
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Distance
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Cost
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {filteredDeliveries.map((delivery) => (
-                <tr key={delivery.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={delivery.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900">
                       {delivery.delivery_id}
@@ -248,7 +286,7 @@ const Deliveries: React.FC = () => {
         
         {filteredDeliveries.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No deliveries found</p>
+            <p className="text-gray-400 text-sm">No deliveries found</p>
           </div>
         )}
       </div>

@@ -55,6 +55,18 @@ module.exports = {
           900: '#7f1d1d',
         },
       },
+      spacing: {
+        'safe-bottom': 'env(safe-area-inset-bottom, 0px)',
+        'safe-top': 'env(safe-area-inset-top, 0px)',
+        'safe-left': 'env(safe-area-inset-left, 0px)',
+        'safe-right': 'env(safe-area-inset-right, 0px)',
+      },
+      minHeight: {
+        'touch': '44px',
+      },
+      minWidth: {
+        'touch': '44px',
+      },
     },
   },
   plugins: [],

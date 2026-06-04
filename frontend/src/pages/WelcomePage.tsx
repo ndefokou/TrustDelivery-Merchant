@@ -1,56 +1,57 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Package, MapPin, Shield } from 'lucide-react';
+import { Truck, Package, MapPin, Shield, ChevronRight } from 'lucide-react';
 
 const WelcomePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center px-5 sm:px-6">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-lg w-full text-center">
+      <div className="relative z-10 max-w-sm sm:max-w-md w-full text-center">
         {/* Logo */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-            <Truck className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-center mb-6 sm:mb-8">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/30">
+            <Truck className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
           </div>
         </div>
 
         {/* App Name */}
-        <h1 className="text-4xl font-bold text-white mb-2">Trida</h1>
-        <p className="text-slate-400 text-lg mb-8">Merchant Portal</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1.5">Trida</h1>
+        <p className="text-slate-400 text-base sm:text-lg mb-6 sm:mb-8">Merchant Portal</p>
 
         {/* Description */}
-        <p className="text-slate-300 text-base leading-relaxed mb-10 max-w-md mx-auto">
+        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-8 sm:mb-10 max-w-xs sm:max-w-md mx-auto">
           Fast, reliable delivery for your business. Create deliveries, track packages 
           in real-time, and manage your logistics — all in one place.
         </p>
 
         {/* Feature highlights */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
-          <div className="flex flex-col items-center p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <Package className="w-5 h-5 text-orange-400 mb-2" />
-            <span className="text-xs text-slate-300">Create Deliveries</span>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-10">
+          <div className="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mb-1.5 sm:mb-2" />
+            <span className="text-[11px] sm:text-xs text-slate-300 leading-tight">Create Deliveries</span>
           </div>
-          <div className="flex flex-col items-center p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <MapPin className="w-5 h-5 text-orange-400 mb-2" />
-            <span className="text-xs text-slate-300">Real-time Tracking</span>
+          <div className="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+            <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mb-1.5 sm:mb-2" />
+            <span className="text-[11px] sm:text-xs text-slate-300 leading-tight">Real-time Tracking</span>
           </div>
-          <div className="flex flex-col items-center p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <Shield className="w-5 h-5 text-orange-400 mb-2" />
-            <span className="text-xs text-slate-300">Secure Payments</span>
+          <div className="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50">
+            <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mb-1.5 sm:mb-2" />
+            <span className="text-[11px] sm:text-xs text-slate-300 leading-tight">Secure Payments</span>
           </div>
         </div>
 
         {/* Get Started Button */}
         <Link
           to="/register"
-          className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/25 mb-4"
+          className="btn-primary text-base mb-3"
         >
           Get Started
+          <ChevronRight className="w-5 h-5 ml-1" />
         </Link>
 
         {/* Sign In Link */}

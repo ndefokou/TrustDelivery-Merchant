@@ -5,10 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { BusinessType, BUSINESS_TYPE_LABELS } from '../types';
 
 const STEPS = [
-  { id: 1, title: 'Business Information', icon: Store },
-  { id: 2, title: 'Owner Information', icon: User },
+  { id: 1, title: 'Business', icon: Store },
+  { id: 2, title: 'Owner', icon: User },
   { id: 3, title: 'Security', icon: Lock },
-  { id: 4, title: 'Terms & Conditions', icon: FileText },
+  { id: 4, title: 'Terms', icon: FileText },
 ];
 
 const RegisterPage: React.FC = () => {
@@ -114,8 +114,6 @@ const RegisterPage: React.FC = () => {
         password: formData.password,
         accept_terms: formData.accept_terms,
       });
-      // After registration, merchant status is pending_approval
-      // AuthContext will handle redirect based on status
       navigate('/pending-approval', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
@@ -125,7 +123,7 @@ const RegisterPage: React.FC = () => {
   };
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-6 sm:mb-8">
       {STEPS.map((s, index) => {
         const Icon = s.icon;
         const isActive = step === s.id;
@@ -134,7 +132,7 @@ const RegisterPage: React.FC = () => {
           <React.Fragment key={s.id}>
             <div className="flex flex-col items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors ${
                   isCompleted
                     ? 'bg-emerald-500 text-white'
                     : isActive
@@ -142,16 +140,16 @@ const RegisterPage: React.FC = () => {
                     : 'bg-slate-700 text-slate-400'
                 }`}
               >
-                {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                {isCompleted ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
               </div>
-              <span className={`text-xs mt-1.5 hidden sm:block ${
+              <span className={`text-[10px] sm:text-xs mt-1 ${
                 isActive ? 'text-orange-400 font-medium' : isCompleted ? 'text-emerald-400' : 'text-slate-500'
               }`}>
                 {s.title}
               </span>
             </div>
             {index < STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-2 rounded ${
+              <div className={`flex-1 h-0.5 mx-1.5 sm:mx-2 rounded ${
                 step > s.id ? 'bg-emerald-500' : 'bg-slate-700'
               }`} />
             )}
@@ -163,11 +161,11 @@ const RegisterPage: React.FC = () => {
 
   const renderStep1 = () => (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-white mb-1">Business Information</h2>
+      <h2 className="text-lg font-semibold text-white mb-0.5">Business Information</h2>
       <p className="text-slate-400 text-sm mb-4">Tell us about your business</p>
 
       <div>
-        <label htmlFor="business_name" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="business_name" className="block text-sm font-medium text-slate-300 mb-1.5">
           Business Name <span className="text-red-400">*</span>
         </label>
         <input
@@ -178,12 +176,12 @@ const RegisterPage: React.FC = () => {
           value={formData.business_name}
           onChange={handleChange}
           placeholder="e.g. Arthur Electronics"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
 
       <div>
-        <label htmlFor="business_type" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="business_type" className="block text-sm font-medium text-slate-300 mb-1.5">
           Business Type <span className="text-red-400">*</span>
         </label>
         <select
@@ -191,7 +189,7 @@ const RegisterPage: React.FC = () => {
           name="business_type"
           value={formData.business_type}
           onChange={handleChange}
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors appearance-none"
+          className="dark-input appearance-none"
         >
           {Object.entries(BUSINESS_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
@@ -200,7 +198,7 @@ const RegisterPage: React.FC = () => {
       </div>
 
       <div>
-        <label htmlFor="business_address" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="business_address" className="block text-sm font-medium text-slate-300 mb-1.5">
           Business Address <span className="text-red-400">*</span>
         </label>
         <input
@@ -211,12 +209,12 @@ const RegisterPage: React.FC = () => {
           value={formData.business_address}
           onChange={handleChange}
           placeholder="e.g. Mvog-Ada, Yaoundé"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
 
       <div>
-        <label htmlFor="business_phone" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="business_phone" className="block text-sm font-medium text-slate-300 mb-1.5">
           Business Phone Number <span className="text-red-400">*</span>
         </label>
         <input
@@ -227,12 +225,12 @@ const RegisterPage: React.FC = () => {
           value={formData.business_phone}
           onChange={handleChange}
           placeholder="e.g. 677123456"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
 
       <div>
-        <label htmlFor="business_email" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="business_email" className="block text-sm font-medium text-slate-300 mb-1.5">
           Business Email <span className="text-slate-500 text-xs">(optional)</span>
         </label>
         <input
@@ -242,7 +240,7 @@ const RegisterPage: React.FC = () => {
           value={formData.business_email}
           onChange={handleChange}
           placeholder="e.g. contact@arthurelectronics.com"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
     </div>
@@ -250,11 +248,11 @@ const RegisterPage: React.FC = () => {
 
   const renderStep2 = () => (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-white mb-1">Owner Information</h2>
+      <h2 className="text-lg font-semibold text-white mb-0.5">Owner Information</h2>
       <p className="text-slate-400 text-sm mb-4">Tell us about the business owner</p>
 
       <div>
-        <label htmlFor="owner_name" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="owner_name" className="block text-sm font-medium text-slate-300 mb-1.5">
           Owner Full Name <span className="text-red-400">*</span>
         </label>
         <input
@@ -265,12 +263,12 @@ const RegisterPage: React.FC = () => {
           value={formData.owner_name}
           onChange={handleChange}
           placeholder="e.g. Arthur Tcheutchoua"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
 
       <div>
-        <label htmlFor="owner_phone" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="owner_phone" className="block text-sm font-medium text-slate-300 mb-1.5">
           Owner Phone Number <span className="text-red-400">*</span>
         </label>
         <input
@@ -281,12 +279,12 @@ const RegisterPage: React.FC = () => {
           value={formData.owner_phone}
           onChange={handleChange}
           placeholder="e.g. 678123456"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
 
       <div>
-        <label htmlFor="national_id" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="national_id" className="block text-sm font-medium text-slate-300 mb-1.5">
           National ID Number <span className="text-slate-500 text-xs">(optional — helps verify your account faster)</span>
         </label>
         <input
@@ -296,7 +294,7 @@ const RegisterPage: React.FC = () => {
           value={formData.national_id}
           onChange={handleChange}
           placeholder="e.g. 1XXXXXXXXX"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
         />
       </div>
     </div>
@@ -304,11 +302,11 @@ const RegisterPage: React.FC = () => {
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-white mb-1">Account Security</h2>
+      <h2 className="text-lg font-semibold text-white mb-0.5">Account Security</h2>
       <p className="text-slate-400 text-sm mb-4">Set up your login credentials</p>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
           Login Email <span className="text-red-400">*</span>
         </label>
         <input
@@ -319,12 +317,13 @@ const RegisterPage: React.FC = () => {
           value={formData.email}
           onChange={handleChange}
           placeholder="merchant@example.com"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
+          autoComplete="email"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
           Password <span className="text-red-400">*</span>
         </label>
         <div className="relative">
@@ -336,32 +335,33 @@ const RegisterPage: React.FC = () => {
             value={formData.password}
             onChange={handleChange}
             placeholder="Min 8 chars, 1 uppercase, 1 number"
-            className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors pr-10"
+            className="dark-input pr-12"
+            autoComplete="new-password"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-300 transition-colors"
           >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
         {/* Password strength indicator */}
         <div className="mt-2 space-y-1">
-          <div className={`text-xs flex items-center gap-1 ${formData.password.length >= 8 ? 'text-emerald-400' : 'text-slate-500'}`}>
+          <div className={`text-xs flex items-center gap-1.5 ${formData.password.length >= 8 ? 'text-emerald-400' : 'text-slate-500'}`}>
             <span>{formData.password.length >= 8 ? '✓' : '○'}</span> At least 8 characters
           </div>
-          <div className={`text-xs flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? 'text-emerald-400' : 'text-slate-500'}`}>
+          <div className={`text-xs flex items-center gap-1.5 ${/[A-Z]/.test(formData.password) ? 'text-emerald-400' : 'text-slate-500'}`}>
             <span>{/[A-Z]/.test(formData.password) ? '✓' : '○'}</span> One uppercase letter
           </div>
-          <div className={`text-xs flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-emerald-400' : 'text-slate-500'}`}>
+          <div className={`text-xs flex items-center gap-1.5 ${/[0-9]/.test(formData.password) ? 'text-emerald-400' : 'text-slate-500'}`}>
             <span>{/[0-9]/.test(formData.password) ? '✓' : '○'}</span> One number
           </div>
         </div>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300 mb-1.5">
           Confirm Password <span className="text-red-400">*</span>
         </label>
         <input
@@ -372,10 +372,11 @@ const RegisterPage: React.FC = () => {
           value={formData.confirmPassword}
           onChange={handleChange}
           placeholder="Re-enter your password"
-          className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          className="dark-input"
+          autoComplete="new-password"
         />
         {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-          <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+          <p className="text-red-400 text-xs mt-1.5">Passwords do not match</p>
         )}
       </div>
     </div>
@@ -383,10 +384,10 @@ const RegisterPage: React.FC = () => {
 
   const renderStep4 = () => (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-white mb-1">Terms & Conditions</h2>
+      <h2 className="text-lg font-semibold text-white mb-0.5">Terms & Conditions</h2>
       <p className="text-slate-400 text-sm mb-4">Please review and accept our terms</p>
 
-      <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg p-4 max-h-48 overflow-y-auto text-sm text-slate-300 space-y-3">
+      <div className="bg-slate-900/50 border border-slate-600/50 rounded-xl p-4 max-h-40 sm:max-h-48 overflow-y-auto text-sm text-slate-300 space-y-3">
         <p><strong className="text-white">1. Service Agreement</strong><br />
         By using TrustDelivery, you agree to use our delivery services in accordance with applicable laws and regulations. TrustDelivery acts as an intermediary between merchants and delivery riders.</p>
         
@@ -403,13 +404,13 @@ const RegisterPage: React.FC = () => {
         New merchant accounts require administrative approval before they can be used. TrustDelivery reserves the right to reject or suspend accounts that violate our policies.</p>
       </div>
 
-      <label className="flex items-start gap-3 cursor-pointer group">
+      <label className="flex items-start gap-3 cursor-pointer group py-1">
         <input
           type="checkbox"
           name="accept_terms"
           checked={formData.accept_terms}
           onChange={handleChange}
-          className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-900/50 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+          className="mt-1 w-5 h-5 min-h-0 rounded border-slate-600 bg-slate-900/50 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
         />
         <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
           I agree to TrustDelivery's <span className="text-orange-400">terms and conditions</span> and understand that my account requires approval before I can create deliveries.
@@ -419,22 +420,22 @@ const RegisterPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-5 sm:px-6 py-6 sm:py-8">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-lg w-full">
+      <div className="relative z-10 max-w-sm sm:max-w-lg w-full">
         {/* Header */}
-        <div className="text-center mb-6">
-          <Link to="/welcome" className="inline-flex items-center justify-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+        <div className="text-center mb-5 sm:mb-6">
+          <Link to="/welcome" className="inline-flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/30">
               <Truck className="w-6 h-6 text-white" />
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-slate-400 mt-1">Start managing your deliveries today</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Create your account</h1>
+          <p className="text-slate-400 mt-1 text-sm sm:text-base">Start managing your deliveries today</p>
         </div>
 
         {/* Step indicator */}
@@ -442,9 +443,9 @@ const RegisterPage: React.FC = () => {
 
         {/* Form */}
         <form onSubmit={step === 4 ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} 
-              className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
+              className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 sm:p-6">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 mb-4">
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 mb-4 animate-fade-in">
               {error}
             </div>
           )}
@@ -460,7 +461,7 @@ const RegisterPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center gap-2 px-4 py-2.5 text-slate-400 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-slate-400 hover:text-white transition-colors min-h-touch"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -472,7 +473,7 @@ const RegisterPage: React.FC = () => {
             {step < 4 ? (
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/25"
+                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold py-2.5 px-5 sm:px-6 rounded-xl transition-all duration-200 shadow-lg shadow-orange-500/20 min-h-touch"
               >
                 Next
                 <ArrowRight className="w-4 h-4" />
@@ -481,7 +482,7 @@ const RegisterPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/25"
+                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-5 sm:px-6 rounded-xl transition-all duration-200 shadow-lg shadow-orange-500/20 min-h-touch"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -497,7 +498,7 @@ const RegisterPage: React.FC = () => {
         </form>
 
         {/* Footer */}
-        <p className="text-center text-slate-400 text-sm mt-6">
+        <p className="text-center text-slate-400 text-sm mt-5 sm:mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
             Sign In

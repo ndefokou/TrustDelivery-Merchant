@@ -9,7 +9,8 @@ import {
   Calculator,
   Check,
   AlertCircle,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from 'lucide-react';
 import { CreateDeliveryRequest, PaymentMethod, AddressSearchResult, DeliveryCostCalculation } from '../types';
 import { searchAddresses, createDelivery, calculateDeliveryCost } from '../services/api';
@@ -65,7 +66,6 @@ const CreateDelivery: React.FC = () => {
       setCalculatedCost(cost);
     } catch (err) {
       console.error('Failed to calculate cost:', err);
-      // Fallback calculation
       const distance = Math.random() * 15 + 1;
       setCalculatedCost({
         distance_km: Math.round(distance * 10) / 10,
@@ -75,7 +75,6 @@ const CreateDelivery: React.FC = () => {
     }
   }, []);
 
-  // Calculate cost when address is selected
   useEffect(() => {
     if (selectedAddress?.id) {
       calculateCost(selectedAddress.id);
@@ -156,48 +155,46 @@ const CreateDelivery: React.FC = () => {
     return value.toLocaleString('fr-CM');
   };
 
+  const stepLabels = ['Details', 'Payment', 'Done'];
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-center space-x-4">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-center space-x-3 sm:space-x-4">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
               <div className={`
-                w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                ${step >= s ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'}
+                w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                ${step >= s ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'}
               `}>
-                {step > s ? <Check className="w-5 h-5" /> : s}
+                {step > s ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : s}
               </div>
               {s < 3 && (
-                <div className={`w-16 h-1 ${step > s ? 'bg-primary-600' : 'bg-gray-200'}`} />
+                <div className={`w-10 sm:w-16 h-1 rounded ${step > s ? 'bg-orange-500' : 'bg-gray-200'}`} />
               )}
             </div>
           ))}
         </div>
-        <div className="flex justify-center mt-2 space-x-12 text-sm">
-          <span className={step >= 1 ? 'text-primary-600 font-medium' : 'text-gray-500'}>
-            Delivery Details
-          </span>
-          <span className={step >= 2 ? 'text-primary-600 font-medium' : 'text-gray-500'}>
-            Payment
-          </span>
-          <span className={step >= 3 ? 'text-primary-600 font-medium' : 'text-gray-500'}>
-            Confirmation
-          </span>
+        <div className="flex justify-center mt-2 space-x-6 sm:space-x-12 text-xs sm:text-sm">
+          {stepLabels.map((label, i) => (
+            <span key={label} className={step >= i + 1 ? 'text-orange-500 font-medium' : 'text-gray-400'}>
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 
       {/* Step 1: Delivery Details */}
       {step === 1 && (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Delivery Details</h2>
+        <div className="mobile-card">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5 sm:mb-6">Delivery Details</h2>
           
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Product Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Package className="w-4 h-4 inline mr-2" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <Package className="w-4 h-4 inline mr-1.5" />
                 Product Description
               </label>
               <input
@@ -205,11 +202,11 @@ const CreateDelivery: React.FC = () => {
                 value={formData.product_description}
                 onChange={(e) => setFormData(prev => ({ ...prev, product_description: e.target.value }))}
                 placeholder="e.g., Samsung Galaxy S24 Ultra 256GB Black"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="mobile-input"
               />
               {errors.product_description && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {errors.product_description}
                 </p>
               )}
@@ -217,7 +214,7 @@ const CreateDelivery: React.FC = () => {
 
             {/* Product Value */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Product Value (FCFA)
               </label>
               <input
@@ -225,11 +222,11 @@ const CreateDelivery: React.FC = () => {
                 value={formData.product_value || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, product_value: parseInt(e.target.value) || 0 }))}
                 placeholder="e.g., 450000"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="mobile-input"
               />
               {errors.product_value && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {errors.product_value}
                 </p>
               )}
@@ -237,8 +234,8 @@ const CreateDelivery: React.FC = () => {
 
             {/* Customer Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <User className="w-4 h-4 inline mr-2" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <User className="w-4 h-4 inline mr-1.5" />
                 Customer Name
               </label>
               <input
@@ -246,11 +243,11 @@ const CreateDelivery: React.FC = () => {
                 value={formData.customer_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
                 placeholder="e.g., John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="mobile-input"
               />
               {errors.customer_name && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {errors.customer_name}
                 </p>
               )}
@@ -258,12 +255,12 @@ const CreateDelivery: React.FC = () => {
 
             {/* Customer Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Phone className="w-4 h-4 inline mr-2" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <Phone className="w-4 h-4 inline mr-1.5" />
                 Customer Phone Number
               </label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg text-gray-600">
+                <span className="inline-flex items-center px-3.5 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-gray-600 text-sm">
                   +237
                 </span>
                 <input
@@ -272,12 +269,12 @@ const CreateDelivery: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, customer_phone: e.target.value.replace(/\D/g, '') }))}
                   placeholder="6XX XXX XXX"
                   maxLength={9}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="mobile-input !rounded-l-none"
                 />
               </div>
               {errors.customer_phone && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {errors.customer_phone}
                 </p>
               )}
@@ -285,8 +282,8 @@ const CreateDelivery: React.FC = () => {
 
             {/* Delivery Address */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <MapPin className="w-4 h-4 inline mr-2" />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <MapPin className="w-4 h-4 inline mr-1.5" />
                 Delivery Address
               </label>
               <div className="relative">
@@ -299,40 +296,40 @@ const CreateDelivery: React.FC = () => {
                   }}
                   onFocus={() => setShowAddressSuggestions(true)}
                   placeholder="Start typing address..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="mobile-input"
                 />
                 {searchingAddresses && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="absolute right-3.5 top-1/2 transform -translate-y-1/2">
                     <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                   </div>
                 )}
                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-auto">
                     {addressSuggestions.map((addr) => (
                       <button
                         key={addr.id}
                         type="button"
                         onClick={() => handleAddressSelect(addr)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0"
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 border-b last:border-b-0 transition-colors"
                       >
-                        <p className="font-medium text-gray-900">{addr.address_text}</p>
-                        {addr.area && <p className="text-sm text-gray-500">{addr.area}</p>}
+                        <p className="font-medium text-gray-900 text-sm">{addr.address_text}</p>
+                        {addr.area && <p className="text-xs text-gray-500 mt-0.5">{addr.area}</p>}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
               {errors.delivery_address && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
+                <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {errors.delivery_address}
                 </p>
               )}
               {selectedAddress && (
-                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium">{selectedAddress.address_text}</p>
+                <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <p className="text-sm text-emerald-800 font-medium">{selectedAddress.address_text}</p>
                   {selectedAddress.area && (
-                    <p className="text-xs text-green-600">{selectedAddress.area}</p>
+                    <p className="text-xs text-emerald-600 mt-0.5">{selectedAddress.area}</p>
                   )}
                 </div>
               )}
@@ -342,7 +339,7 @@ const CreateDelivery: React.FC = () => {
           <div className="mt-6 flex justify-end">
             <button
               onClick={handleNextStep}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 font-medium text-sm min-h-touch shadow-sm"
             >
               Continue to Payment
             </button>
@@ -352,23 +349,23 @@ const CreateDelivery: React.FC = () => {
 
       {/* Step 2: Payment */}
       {step === 2 && (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Payment Details</h2>
+        <div className="mobile-card">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5 sm:mb-6">Payment Details</h2>
 
           {/* Cost Summary */}
           {calculatedCost && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <div className="flex items-center mb-2">
-                <Calculator className="w-5 h-5 text-blue-600 mr-2" />
-                <span className="font-medium text-blue-900">Delivery Cost Calculation</span>
+                <Calculator className="w-4 h-4 text-blue-600 mr-2" />
+                <span className="font-medium text-blue-900 text-sm">Delivery Cost Calculation</span>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-3">
                 <div>
-                  <p className="text-sm text-blue-700">Distance</p>
+                  <p className="text-xs text-blue-700">Distance</p>
                   <p className="text-lg font-semibold text-blue-900">{calculatedCost.distance_km} km</p>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-700">Delivery Cost</p>
+                  <p className="text-xs text-blue-700">Delivery Cost</p>
                   <p className="text-lg font-semibold text-blue-900">{formatCurrency(calculatedCost.delivery_cost)} FCFA</p>
                 </div>
               </div>
@@ -376,35 +373,35 @@ const CreateDelivery: React.FC = () => {
           )}
 
           {/* Order Summary */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3">Order Summary</h3>
+          <div className="mb-5 p-4 bg-gray-50 rounded-xl">
+            <h3 className="font-medium text-gray-900 mb-3 text-sm">Order Summary</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Product</span>
-                <span className="text-gray-900">{formData.product_description}</span>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Product</span>
+                <span className="text-gray-900 text-right truncate max-w-[180px]">{formData.product_description}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Value</span>
+                <span className="text-gray-500">Value</span>
                 <span className="text-gray-900">{formatCurrency(formData.product_value)} FCFA</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Customer</span>
-                <span className="text-gray-900">{formData.customer_name}</span>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Customer</span>
+                <span className="text-gray-900 text-right truncate max-w-[180px]">{formData.customer_name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Address</span>
-                <span className="text-gray-900 text-right max-w-[200px]">{selectedAddress?.address_text}</span>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Address</span>
+                <span className="text-gray-900 text-right truncate max-w-[180px]">{selectedAddress?.address_text}</span>
               </div>
             </div>
           </div>
 
           {/* Payment Method Selection */}
-          <div className="mb-6">
+          <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              <CreditCard className="w-4 h-4 inline mr-2" />
+              <CreditCard className="w-4 h-4 inline mr-1.5" />
               Select Payment Method
             </label>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[
                 { id: 'orange_money', name: 'Orange Money', icon: '🟠' },
                 { id: 'mtn_momo', name: 'MTN MoMo', icon: '🟡' },
@@ -413,10 +410,10 @@ const CreateDelivery: React.FC = () => {
                 <label
                   key={method.id}
                   className={`
-                    flex items-center p-4 border rounded-lg cursor-pointer transition-colors
+                    flex items-center p-3.5 sm:p-4 border rounded-xl cursor-pointer transition-all duration-200 min-h-touch
                     ${formData.payment_method === method.id 
-                      ? 'border-primary-500 bg-primary-50' 
-                      : 'border-gray-200 hover:border-gray-300'}
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-gray-200 hover:border-gray-300 active:bg-gray-50'}
                   `}
                 >
                   <input
@@ -427,10 +424,10 @@ const CreateDelivery: React.FC = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, payment_method: e.target.value as PaymentMethod }))}
                     className="sr-only"
                   />
-                  <span className="text-2xl mr-3">{method.icon}</span>
-                  <span className="font-medium text-gray-900">{method.name}</span>
+                  <span className="text-xl sm:text-2xl mr-3">{method.icon}</span>
+                  <span className="font-medium text-gray-900 text-sm">{method.name}</span>
                   {formData.payment_method === method.id && (
-                    <Check className="w-5 h-5 ml-auto text-primary-600" />
+                    <Check className="w-5 h-5 ml-auto text-orange-500" />
                   )}
                 </label>
               ))}
@@ -438,29 +435,30 @@ const CreateDelivery: React.FC = () => {
           </div>
 
           {errors.submit && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-1" />
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {errors.submit}
               </p>
             </div>
           )}
 
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between">
             <button
               onClick={() => setStep(1)}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 px-5 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium min-h-touch sm:min-h-0"
             >
+              <ArrowLeft className="w-4 h-4" />
               Back
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center"
+              className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium min-h-touch shadow-sm"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Processing...
                 </>
               ) : (
@@ -473,22 +471,22 @@ const CreateDelivery: React.FC = () => {
 
       {/* Step 3: Success */}
       {step === 3 && (
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
+        <div className="mobile-card text-center py-6 sm:py-8">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Delivery Created Successfully!</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Delivery Created!</h2>
+          <p className="text-gray-500 text-sm mb-5 sm:mb-6">
             Your delivery request has been created and is awaiting rider assignment.
           </p>
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600">Delivery ID</p>
+          <div className="bg-gray-50 rounded-xl p-4 mb-5 sm:mb-6">
+            <p className="text-xs text-gray-500">Delivery ID</p>
             <p className="text-xl font-bold text-gray-900">{createdDeliveryId}</p>
           </div>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-center sm:space-x-0">
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:bg-orange-700 transition-all duration-200 text-sm font-medium min-h-touch shadow-sm"
             >
               Go to Dashboard
             </button>
@@ -508,7 +506,7 @@ const CreateDelivery: React.FC = () => {
                 setCalculatedCost(null);
                 setCreatedDeliveryId(null);
               }}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm font-medium min-h-touch"
             >
               Create Another
             </button>

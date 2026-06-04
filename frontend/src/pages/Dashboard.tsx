@@ -8,7 +8,8 @@ import {
   TrendingUp,
   ArrowUpRight,
   Box,
-  Loader2
+  Loader2,
+  ChevronRight
 } from 'lucide-react';
 import { Delivery, DeliveryStatus, DeliveryStats } from '../types';
 import { getDeliveries, getDeliveryStats } from '../services/api';
@@ -28,7 +29,6 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch stats and recent deliveries in parallel
       const [statsData, deliveriesData] = await Promise.all([
         getDeliveryStats(),
         getDeliveries(undefined, 1, 6)
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
     };
 
     const labels = {
-      awaiting_assignment: 'Awaiting Assignment',
+      awaiting_assignment: 'Awaiting',
       assigned: 'Assigned',
       in_transit: 'In Transit',
       delivered: 'Delivered',
@@ -69,8 +69,8 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${styles[status]}`}>
-        <span className={`w-1.5 h-1.5 rounded-full mr-2 ${dotColors[status]}`} />
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium border ${styles[status]}`}>
+        <span className={`w-1.5 h-1.5 rounded-full mr-1 ${dotColors[status]}`} />
         {labels[status]}
       </span>
     );
@@ -87,10 +87,10 @@ const Dashboard: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-red-600 mb-4 text-sm">{error}</p>
         <button 
           onClick={fetchDashboardData}
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+          className="px-5 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors text-sm font-medium"
         >
           Retry
         </button>
@@ -101,101 +101,103 @@ const Dashboard: React.FC = () => {
   if (!stats) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">No data available</p>
+        <p className="text-gray-500">No data available</p>
       </div>
     );
   }
 
+  const statCards = [
+    { label: 'Active', value: stats.active_deliveries, icon: Box, color: 'bg-slate-100 text-slate-600' },
+    { label: 'Awaiting', value: stats.awaiting_assignment, icon: Clock, color: 'bg-amber-100 text-amber-600' },
+    { label: 'In Transit', value: stats.in_transit, icon: Truck, color: 'bg-orange-100 text-orange-600' },
+    { label: 'Delivered', value: stats.delivered, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600' },
+    { label: 'Failed', value: stats.failed, icon: XCircle, color: 'bg-red-100 text-red-600' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <p className="text-sm text-gray-500">Welcome back</p>
-          <h1 className="text-2xl font-bold text-gray-900">Operations overview</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Operations overview</h1>
         </div>
-        <div className="flex items-center text-sm text-emerald-600">
+        <div className="hidden sm:flex items-center text-sm text-emerald-600">
           <TrendingUp className="w-4 h-4 mr-1" />
           <span>+12% on-time deliveries this week</span>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Active Deliveries */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center mb-3">
-            <Box className="w-5 h-5 text-slate-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.active_deliveries}</p>
-          <p className="text-sm text-gray-500">Active deliveries</p>
-        </div>
-
-        {/* Awaiting Assignment */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3">
-            <Clock className="w-5 h-5 text-amber-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.awaiting_assignment}</p>
-          <p className="text-sm text-gray-500">Awaiting assignment</p>
-        </div>
-
-        {/* In Transit */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-3">
-            <Truck className="w-5 h-5 text-orange-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.in_transit}</p>
-          <p className="text-sm text-gray-500">In transit</p>
-        </div>
-
-        {/* Delivered */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3">
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.delivered}</p>
-          <p className="text-sm text-gray-500">Delivered</p>
-        </div>
-
-        {/* Failed */}
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-3">
-            <XCircle className="w-5 h-5 text-red-600" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{stats.failed}</p>
-          <p className="text-sm text-gray-500">Failed</p>
-        </div>
+      {/* Stats Cards - Scrollable on mobile */}
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-4 sm:overflow-visible scrollbar-none">
+        {statCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="mobile-card flex-shrink-0 w-32 sm:w-auto">
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${card.color} flex items-center justify-center mb-2.5`}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{card.value}</p>
+              <p className="text-xs sm:text-sm text-gray-500">{card.label}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Total Spending Card */}
-      <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 max-w-xs">
-        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
+      <div className="mobile-card max-w-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_spending.toLocaleString()} FCFA</p>
+            <p className="text-xs sm:text-sm text-gray-500">Total spending</p>
+          </div>
         </div>
-        <p className="text-2xl font-bold text-gray-900">{stats.total_spending.toLocaleString()} FCFA</p>
-        <p className="text-sm text-gray-500">Total spending</p>
       </div>
 
       {/* Recent Deliveries */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="mobile-card !p-0 overflow-hidden">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Recent deliveries</h2>
-            <p className="text-sm text-gray-500">Most recent {recentDeliveries.length} orders</p>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent deliveries</h2>
+            <p className="text-xs sm:text-sm text-gray-500">Most recent {recentDeliveries.length} orders</p>
           </div>
           <Link 
             to="/deliveries" 
-            className="text-sm text-orange-500 hover:text-orange-600 font-medium flex items-center"
+            className="text-sm text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5"
           >
             View all
-            <ArrowUpRight className="w-4 h-4 ml-1" />
+            <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
         
-        <div className="overflow-x-auto">
+        {/* Mobile: Card list */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {recentDeliveries.map((delivery) => (
+            <Link
+              key={delivery.id}
+              to={`/delivery/${delivery.id}`}
+              className="flex items-center gap-3 px-4 py-3.5 active:bg-gray-50 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-900">{delivery.delivery_id}</span>
+                  {getStatusBadge(delivery.status)}
+                </div>
+                <p className="text-sm text-gray-600 truncate">{delivery.product_description}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{delivery.customer_name} · {delivery.delivery_cost.toLocaleString()} FCFA</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop: Table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50/50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   ID
@@ -220,9 +222,9 @@ const Dashboard: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {recentDeliveries.map((delivery) => (
-                <tr key={delivery.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={delivery.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900">
                       {delivery.delivery_id}
@@ -264,6 +266,12 @@ const Dashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {recentDeliveries.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-sm">No deliveries yet</p>
+          </div>
+        )}
       </div>
     </div>
   );
