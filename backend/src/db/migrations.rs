@@ -253,50 +253,66 @@ async fn seed_demo_data(pool: &PgPool) -> Result<(), sqlx::Error> {
     )
     .fetch_one(pool)
     .await?;
-    
-    if merchant_exists {
+
+    let deliveries_exist: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM deliveries LIMIT 1)"
+    )
+    .fetch_one(pool)
+    .await?;
+
+    if merchant_exists && deliveries_exist {
         log::info!("Demo data already exists, skipping seed");
         return Ok(());
     }
-    
+
     log::info!("Seeding demo data...");
-    
+
     // Insert demo merchant (with active status so demo data works without approval flow)
-    sqlx::query(
-        r#"
-        INSERT INTO merchants (id, email, password_hash, business_name, business_type, business_address, business_phone, business_email, owner_name, owner_phone, national_id, status, dispatch_latitude, dispatch_longitude, wallet_balance)
-        VALUES ('00000000-0000-0000-0000-000000000001', 'demo@electroshop.com', '', 'Electroshop', 'electronics', 'Bastos, Yaoundé', '+237677123456', 'demo@electroshop.com', 'Demo Owner', '+237677123456', NULL, 'active', 3.8808, 11.5022, 500000)
-        "#
-    )
-    .execute(pool)
-    .await?;
-    
-    // Insert some saved addresses
-    let addresses = vec![
-        ("Bastos Carrefour Tradex", 3.8808, 11.5022, "Bastos"),
-        ("Centre Ville Place de l'Étoile", 3.8625, 11.5167, "Centre Ville"),
-        ("Mvan Carrefour", 3.8456, 11.5023, "Mvan"),
-        ("Nlongkak Carrefour", 3.8712, 11.4890, "Nlongkak"),
-        ("Bonapriso Marché", 3.8654, 11.5123, "Bonapriso"),
-        ("Essos Hôpital", 3.8891, 11.5234, "Essos"),
-        ("Mendong Marché", 3.8345, 11.4876, "Mendong"),
-        ("Akwa Boulevard de la Liberté", 3.8723, 11.4987, "Akwa"),
-        ("Logbessou Université", 3.8234, 11.5345, "Logbessou"),
-    ];
-    
-    for (text, lat, lon, area) in addresses {
+    if !merchant_exists {
         sqlx::query(
             r#"
-            INSERT INTO addresses (address_text, latitude, longitude, area, is_saved)
-            VALUES ($1, $2, $3, $4, true)
+            INSERT INTO merchants (id, email, password_hash, business_name, business_type, business_address, business_phone, business_email, owner_name, owner_phone, national_id, status, dispatch_latitude, dispatch_longitude, wallet_balance)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'demo@electroshop.com', '', 'Electroshop', 'electronics', 'Bastos, Yaoundé', '+237677123456', 'demo@electroshop.com', 'Demo Owner', '+237677123456', NULL, 'active', 3.8808, 11.5022, 500000)
             "#
         )
-        .bind(text)
-        .bind(lat)
-        .bind(lon)
-        .bind(area)
         .execute(pool)
         .await?;
+    }
+
+    // Insert some saved addresses if table is empty
+    let addresses_exist: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM addresses LIMIT 1)"
+    )
+    .fetch_one(pool)
+    .await?;
+
+    if !addresses_exist {
+        let addresses = vec![
+            ("Bastos Carrefour Tradex", 3.8808, 11.5022, "Bastos"),
+            ("Centre Ville Place de l'Étoile", 3.8625, 11.5167, "Centre Ville"),
+            ("Mvan Carrefour", 3.8456, 11.5023, "Mvan"),
+            ("Nlongkak Carrefour", 3.8712, 11.4890, "Nlongkak"),
+            ("Bonapriso Marché", 3.8654, 11.5123, "Bonapriso"),
+            ("Essos Hôpital", 3.8891, 11.5234, "Essos"),
+            ("Mendong Marché", 3.8345, 11.4876, "Mendong"),
+            ("Akwa Boulevard de la Liberté", 3.8723, 11.4987, "Akwa"),
+            ("Logbessou Université", 3.8234, 11.5345, "Logbessou"),
+        ];
+
+        for (text, lat, lon, area) in addresses {
+            sqlx::query(
+                r#"
+                INSERT INTO addresses (address_text, latitude, longitude, area, is_saved)
+                VALUES ($1, $2, $3, $4, true)
+                "#
+            )
+            .bind(text)
+            .bind(lat)
+            .bind(lon)
+            .bind(area)
+            .execute(pool)
+            .await?;
+        }
     }
     
     // Insert sample deliveries

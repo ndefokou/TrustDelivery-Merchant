@@ -152,11 +152,13 @@ pub async fn create_delivery(
     // Calculate cost
     let delivery_cost = pricing_service::calculate_delivery_cost(distance_km);
 
-    // Generate delivery ID
-    let delivery_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM deliveries")
-        .fetch_one(pool)
-        .await?;
-    let delivery_id = format!("TRD-{}", 1001 + delivery_count as i32);
+    // Generate delivery ID — use MAX so seeded data doesn't collide
+    let max_id: Option<i64> = sqlx::query_scalar(
+        "SELECT MAX(REPLACE(delivery_id, 'TRD-', '')::BIGINT) FROM deliveries"
+    )
+    .fetch_one(pool)
+    .await?;
+    let delivery_id = format!("TRD-{}", max_id.unwrap_or(1000) + 1);
 
     let payment_method_str = match request.payment_method {
         PaymentMethod::OrangeMoney => "orange_money",

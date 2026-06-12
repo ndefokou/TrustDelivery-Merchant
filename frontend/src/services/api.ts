@@ -1,6 +1,6 @@
 import { Delivery, DeliveryStats, DeliveryListResponse, AddressSearchResult, CreateDeliveryRequest, DeliveryCostCalculation, RegisterRequest, LoginRequest, AuthResponse, Merchant } from '../types';
 
-const API_BASE_URL = 'http://localhost:8888';
+const API_BASE_URL = 'http://localhost:3033';
 
 const TOKEN_KEY = 'trida_token';
 const MERCHANT_ID_KEY = 'trida_merchant_id';

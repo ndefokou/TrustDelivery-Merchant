@@ -23,7 +23,7 @@ pub async fn search_addresses(
     .await?;
 
     // Convert to search results
-    let mut results: Vec<AddressSearchResult> = saved_addresses
+    let results: Vec<AddressSearchResult> = saved_addresses
         .into_iter()
         .map(|addr| AddressSearchResult {
             id: Some(addr.id),
@@ -34,20 +34,6 @@ pub async fn search_addresses(
             is_saved: true,
         })
         .collect();
-
-    // If we don't have enough results, add mock suggestions for Yaoundé
-    if results.len() < limit as usize {
-        let mock_addresses = get_mock_yaounde_addresses(query);
-        for mock in mock_addresses {
-            if results.len() >= limit as usize {
-                break;
-            }
-            // Check if this address is already in results
-            if !results.iter().any(|r| r.address_text == mock.address_text) {
-                results.push(mock);
-            }
-        }
-    }
 
     Ok(results)
 }
@@ -70,7 +56,7 @@ pub async fn get_saved_addresses(
     Ok(addresses)
 }
 
-fn get_mock_yaounde_addresses(query: &str) -> Vec<AddressSearchResult> {
+fn _get_mock_yaounde_addresses(query: &str) -> Vec<AddressSearchResult> {
     let all_addresses = vec![
         ("Bastos Carrefour Tradex", 3.8808, 11.5022, "Bastos"),
         ("Bastos Ecobank", 3.8795, 11.5010, "Bastos"),

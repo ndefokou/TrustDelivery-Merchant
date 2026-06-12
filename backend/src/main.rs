@@ -24,7 +24,7 @@ async fn main() -> std::io::Result<()> {
     log::info!("Server running at http://{}", config.server_addr());
 
     let pool = PgPoolOptions::new()
-        .max_connections(10)
+        .max_connections(1)
         .connect(&config.database_url)
         .await
         .expect("Failed to create database pool");

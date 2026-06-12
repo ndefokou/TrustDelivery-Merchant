@@ -113,8 +113,8 @@ const CreateDelivery: React.FC = () => {
       newErrors.customer_phone = 'Invalid Cameroon phone number (6XX XXX XXX)';
     }
     
-    if (!selectedAddress) {
-      newErrors.delivery_address = 'Please select a delivery address';
+    if (!selectedAddress || !selectedAddress.id) {
+      newErrors.delivery_address = 'Please select a valid delivery address';
     }
 
     setErrors(newErrors);

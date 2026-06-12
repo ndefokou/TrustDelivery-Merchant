@@ -34,6 +34,7 @@ pub async fn get_deliveries(
 
 pub async fn create_delivery(
     pool: web::Data<PgPool>,
+    merchant_id: web::ReqData<Uuid>,
     body: web::Json<CreateDeliveryRequest>,
 ) -> HttpResponse {
     let request = body.into_inner();
@@ -48,10 +49,7 @@ pub async fn create_delivery(
         return HttpResponse::BadRequest().json(ApiError::new("Invalid Cameroon phone number format"));
     }
 
-    // Get merchant's dispatch location (default merchant for demo)
-    let merchant_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
-
-    match delivery_service::create_delivery(&pool, merchant_id, request).await {
+    match delivery_service::create_delivery(&pool, *merchant_id, request).await {
         Ok(delivery) => HttpResponse::Created().json(ApiResponse::success(delivery)),
         Err(e) => HttpResponse::InternalServerError().json(ApiError::new(&e.to_string())),
     }
@@ -87,14 +85,12 @@ pub async fn get_delivery_stats(
 
 pub async fn calculate_delivery_cost(
     pool: web::Data<PgPool>,
+    merchant_id: web::ReqData<Uuid>,
     body: web::Json<CalculateCostRequest>,
 ) -> HttpResponse {
     let request = body.into_inner();
 
-    // Get merchant's dispatch location
-    let merchant_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
-
-    match delivery_service::calculate_cost(&pool, merchant_id, request.address_id).await {
+    match delivery_service::calculate_cost(&pool, *merchant_id, request.address_id).await {
         Ok(calculation) => HttpResponse::Ok().json(ApiResponse::success(calculation)),
         Err(e) => HttpResponse::InternalServerError().json(ApiError::new(&e.to_string())),
     }
