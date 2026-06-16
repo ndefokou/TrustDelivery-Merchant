@@ -262,17 +262,31 @@ async fn seed_demo_data(pool: &PgPool) -> Result<(), sqlx::Error> {
 
     if merchant_exists && deliveries_exist {
         log::info!("Demo data already exists, skipping seed");
+        
+        // Update demo merchant password hash if it's empty (fix for existing data)
+        sqlx::query(
+            r#"
+            UPDATE merchants 
+            SET password_hash = '$2b$12$LQv3c1yqBWVHxkd0LHA4COYz6TtxMQJqhN8/X4.Dz4vVkZrPW8.d0'
+            WHERE id = '00000000-0000-0000-0000-000000000001' 
+            AND (password_hash = '' OR password_hash IS NULL)
+            "#
+        )
+        .execute(pool)
+        .await?;
+        
         return Ok(());
     }
 
     log::info!("Seeding demo data...");
 
     // Insert demo merchant (with active status so demo data works without approval flow)
+    // Password: Demo1234 (bcrypt hash)
     if !merchant_exists {
         sqlx::query(
             r#"
             INSERT INTO merchants (id, email, password_hash, business_name, business_type, business_address, business_phone, business_email, owner_name, owner_phone, national_id, status, dispatch_latitude, dispatch_longitude, wallet_balance)
-            VALUES ('00000000-0000-0000-0000-000000000001', 'demo@electroshop.com', '', 'Electroshop', 'electronics', 'Bastos, Yaoundé', '+237677123456', 'demo@electroshop.com', 'Demo Owner', '+237677123456', NULL, 'active', 3.8808, 11.5022, 500000)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'demo@electroshop.com', '$2b$12$LQv3c1yqBWVHxkd0LHA4COYz6TtxMQJqhN8/X4.Dz4vVkZrPW8.d0', 'Electroshop', 'electronics', 'Bastos, Yaoundé', '+237677123456', 'demo@electroshop.com', 'Demo Owner', '+237677123456', NULL, 'active', 3.8808, 11.5022, 500000)
             "#
         )
         .execute(pool)

@@ -10,7 +10,8 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  ArrowLeft
+  ArrowLeft,
+  Banknote
 } from 'lucide-react';
 import { CreateDeliveryRequest, PaymentMethod, AddressSearchResult, DeliveryCostCalculation } from '../types';
 import { searchAddresses, createDelivery, calculateDeliveryCost } from '../services/api';
@@ -34,7 +35,9 @@ const CreateDelivery: React.FC = () => {
     delivery_address: '',
     delivery_latitude: 0,
     delivery_longitude: 0,
-    payment_method: 'orange_money'
+    payment_method: 'orange_money',
+    collect_payment: false,
+    amount_to_collect: undefined
   });
 
   const [selectedAddress, setSelectedAddress] = useState<AddressSearchResult | null>(null);
@@ -108,7 +111,6 @@ const CreateDelivery: React.FC = () => {
     if (formData.customer_name.length > 100) {
       newErrors.customer_name = 'Customer name must be less than 100 characters';
     }
-    
     const phoneRegex = /^6[0-9]{8}$/;
     const cleanPhone = formData.customer_phone.replace(/\s/g, '');
     if (!phoneRegex.test(cleanPhone)) {
@@ -117,6 +119,10 @@ const CreateDelivery: React.FC = () => {
     
     if (!selectedAddress) {
       newErrors.delivery_address = 'Please select a valid delivery address';
+    }
+    
+    if (formData.collect_payment && (!formData.amount_to_collect || formData.amount_to_collect <= 0)) {
+      newErrors.amount_to_collect = 'Amount to collect must be greater than 0 when payment collection is enabled';
     }
 
     setErrors(newErrors);
@@ -338,6 +344,79 @@ const CreateDelivery: React.FC = () => {
                 </div>
               )}
             </div>
+
+            <div className="border-t border-gray-200 pt-5 mt-5">
+              <h3 className="text-base font-medium text-gray-900 mb-3">
+                <Banknote className="w-4 h-4 inline mr-1.5" />
+                Payment Collection
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Will the rider collect money from the customer during delivery?
+              </p>
+              <div className="space-y-2.5">
+                {[
+                  { value: false, label: 'No', description: 'Customer has already paid' },
+                  { value: true, label: 'Yes', description: 'Rider will collect payment on delivery' }
+                ].map((option) => (
+                  <label
+                    key={String(option.value)}
+                    className={`
+                      flex items-center p-3.5 border rounded-xl cursor-pointer transition-all duration-200 min-h-touch
+                      ${formData.collect_payment === option.value 
+                        ? 'border-orange-500 bg-orange-50' 
+                        : 'border-gray-200 hover:border-gray-300 active:bg-gray-50'}
+                    `}
+                  >
+                    <input
+                      type="radio"
+                      name="collect_payment"
+                      checked={formData.collect_payment === option.value}
+                      onChange={() => setFormData(prev => ({ 
+                        ...prev, 
+                        collect_payment: option.value,
+                        amount_to_collect: option.value ? prev.amount_to_collect : undefined
+                      }))}
+                      className="sr-only"
+                    />
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-900 text-sm">{option.label}</span>
+                      <p className="text-xs text-gray-500 mt-0.5">{option.description}</p>
+                    </div>
+                    {formData.collect_payment === option.value && (
+                      <Check className="w-5 h-5 text-orange-500" />
+                    )}
+                  </label>
+                ))}
+              </div>
+
+              {formData.collect_payment && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Amount to Collect (FCFA)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.amount_to_collect || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      amount_to_collect: parseInt(e.target.value) || undefined 
+                    }))}
+                    placeholder="e.g., 25000"
+                    className="mobile-input"
+                    min="1"
+                  />
+                  {errors.amount_to_collect && (
+                    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {errors.amount_to_collect}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-amber-700">
+                    The rider will be informed to collect this amount from the customer upon delivery.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 flex justify-end">
@@ -398,6 +477,20 @@ const CreateDelivery: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* COD Summary */}
+          {formData.collect_payment && formData.amount_to_collect && (
+            <div className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="flex items-center mb-2">
+                <Banknote className="w-4 h-4 text-amber-600 mr-2" />
+                <span className="font-medium text-amber-900 text-sm">Cash-on-Delivery</span>
+              </div>
+              <div className="mt-2">
+                <p className="text-sm text-amber-700">Rider will collect</p>
+                <p className="text-xl font-bold text-amber-900">{formatCurrency(formData.amount_to_collect)} FCFA</p>
+              </div>
+            </div>
+          )}
 
           {/* Payment Method Selection */}
           <div className="mb-5">
@@ -505,7 +598,9 @@ const CreateDelivery: React.FC = () => {
                   delivery_address: '',
                   delivery_latitude: 0,
                   delivery_longitude: 0,
-                  payment_method: 'orange_money'
+                  payment_method: 'orange_money',
+                  collect_payment: false,
+                  amount_to_collect: undefined
                 });
                 setSelectedAddress(null);
                 setAddressQuery('');

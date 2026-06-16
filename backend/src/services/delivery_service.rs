@@ -6,6 +6,11 @@ use crate::models::{
     DeliveryRow,
 };
 use super::pricing_service;
+use rand::Rng;
+
+fn generate_otp() -> String {
+    format!("{:04}", rand::thread_rng().gen_range(1000..9999))
+}
 
 pub async fn get_deliveries(
     pool: &PgPool,
@@ -29,7 +34,7 @@ pub async fn get_deliveries(
             r#"
             SELECT id, merchant_id, rider_id, customer_name, customer_phone,
                    delivery_address, delivery_latitude, delivery_longitude,
-                   product_description, product_value, delivery_fee, otp_code,
+                   product_description, product_value, delivery_cost, otp_code,
                    status, failure_reason, failure_notes, assigned_at, started_at,
                    completed_at, expected_delivery_time, created_at, updated_at
             FROM deliveries
@@ -49,7 +54,7 @@ pub async fn get_deliveries(
             r#"
             SELECT id, merchant_id, rider_id, customer_name, customer_phone,
                    delivery_address, delivery_latitude, delivery_longitude,
-                   product_description, product_value, delivery_fee, otp_code,
+                   product_description, product_value, delivery_cost, otp_code,
                    status, failure_reason, failure_notes, assigned_at, started_at,
                    completed_at, expected_delivery_time, created_at, updated_at
             FROM deliveries
@@ -103,7 +108,7 @@ pub async fn get_delivery_by_id(
         r#"
         SELECT id, merchant_id, rider_id, customer_name, customer_phone,
                delivery_address, delivery_latitude, delivery_longitude,
-               product_description, product_value, delivery_fee, otp_code,
+               product_description, product_value, delivery_cost, otp_code,
                status, failure_reason, failure_notes, assigned_at, started_at,
                completed_at, expected_delivery_time, created_at, updated_at
         FROM deliveries
@@ -139,19 +144,21 @@ pub async fn create_delivery(
     );
 
     let delivery_cost = pricing_service::calculate_delivery_cost(distance_km);
+    
+    let otp_code = generate_otp();
 
     let row: DeliveryRow = sqlx::query_as::<_, DeliveryRow>(
         r#"
         INSERT INTO deliveries (
             merchant_id, customer_name, customer_phone,
             delivery_address, delivery_latitude, delivery_longitude,
-            product_description, product_value, delivery_fee,
-            status, assigned_at, started_at
+            product_description, product_value, delivery_cost,
+            otp_code, status, assigned_at, started_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'AWAITING_ASSIGNMENT', NULL, NULL)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'AWAITING_ASSIGNMENT', NULL, NULL)
         RETURNING id, merchant_id, rider_id, customer_name, customer_phone,
                   delivery_address, delivery_latitude, delivery_longitude,
-                  product_description, product_value, delivery_fee, otp_code,
+                  product_description, product_value, delivery_cost, otp_code,
                   status, failure_reason, failure_notes, assigned_at, started_at,
                   completed_at, expected_delivery_time, created_at, updated_at
         "#
@@ -165,6 +172,7 @@ pub async fn create_delivery(
     .bind(&request.product_description)
     .bind(request.product_value)
     .bind(delivery_cost)
+    .bind(&otp_code)
     .fetch_one(pool)
     .await?;
 
@@ -211,7 +219,7 @@ pub async fn get_delivery_stats(
     .await?;
 
     let total_spending: i64 = sqlx::query_scalar(
-        "SELECT COALESCE(CAST(SUM(delivery_fee) AS BIGINT), 0) FROM deliveries WHERE merchant_id = $1"
+        "SELECT COALESCE(CAST(SUM(delivery_cost) AS BIGINT), 0) FROM deliveries WHERE merchant_id = $1"
     )
     .bind(merchant_id)
     .fetch_one(pool)

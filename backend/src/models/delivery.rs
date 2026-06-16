@@ -61,6 +61,43 @@ impl From<&str> for DeliveryStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+pub enum CollectionStatus {
+    Pending,
+    Collected,
+    NotCollected,
+}
+
+impl Default for CollectionStatus {
+    fn default() -> Self {
+        Self::Pending
+    }
+}
+
+impl std::fmt::Display for CollectionStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CollectionStatus::Pending => write!(f, "Pending"),
+            CollectionStatus::Collected => write!(f, "Collected"),
+            CollectionStatus::NotCollected => write!(f, "Not Collected"),
+        }
+    }
+}
+
+impl std::str::FromStr for CollectionStatus {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "pending" => Ok(Self::Pending),
+            "collected" => Ok(Self::Collected),
+            "not_collected" | "not collected" => Ok(Self::NotCollected),
+            _ => Err(format!("Unknown collection status: {}", s)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum PaymentMethod {
     OrangeMoney,
     MtnMomo,
@@ -153,6 +190,9 @@ pub struct CreateDeliveryRequest {
     pub delivery_latitude: f64,
     pub delivery_longitude: f64,
     pub payment_method: PaymentMethod,
+    pub collect_payment: bool,
+    #[validate(range(min = 1, message = "Amount to collect must be greater than 0"))]
+    pub amount_to_collect: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -174,7 +214,7 @@ pub struct DeliveryRow {
     pub delivery_longitude: Option<f64>,
     pub product_description: String,
     pub product_value: i64,
-    pub delivery_fee: i64,
+    pub delivery_cost: i64,
     pub otp_code: Option<String>,
     pub status: String,
     pub failure_reason: Option<String>,
@@ -185,6 +225,16 @@ pub struct DeliveryRow {
     pub expected_delivery_time: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    #[sqlx(default)]
+    pub collect_payment: bool,
+    #[sqlx(default)]
+    pub amount_to_collect: Option<i64>,
+    #[sqlx(default)]
+    pub amount_collected: Option<i64>,
+    #[sqlx(default)]
+    pub collection_status: Option<String>,
+    #[sqlx(default)]
+    pub collected_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -211,6 +261,11 @@ pub struct Delivery {
     pub failure_reason: Option<String>,
     pub rider_notes: Option<String>,
     pub otp_code: Option<String>,
+    pub collect_payment: bool,
+    pub amount_to_collect: Option<i64>,
+    pub amount_collected: Option<i64>,
+    pub collection_status: Option<String>,
+    pub collected_at: Option<DateTime<Utc>>,
 }
 
 impl From<DeliveryRow> for Delivery {
@@ -227,7 +282,7 @@ impl From<DeliveryRow> for Delivery {
             delivery_address: row.delivery_address,
             delivery_latitude: row.delivery_latitude,
             delivery_longitude: row.delivery_longitude,
-            delivery_cost: row.delivery_fee,
+            delivery_cost: row.delivery_cost,
             status: row.status.parse().unwrap_or(DeliveryStatus::AwaitingAssignment),
             created_at: row.created_at,
             updated_at: row.updated_at,
@@ -238,6 +293,11 @@ impl From<DeliveryRow> for Delivery {
             failure_reason: row.failure_reason,
             rider_notes: row.failure_notes,
             otp_code: row.otp_code,
+            collect_payment: row.collect_payment,
+            amount_to_collect: row.amount_to_collect,
+            amount_collected: row.amount_collected,
+            collection_status: row.collection_status,
+            collected_at: row.collected_at,
         }
     }
 }

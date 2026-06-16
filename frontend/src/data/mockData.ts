@@ -17,7 +17,8 @@ export const mockDeliveries: Delivery[] = [
     status: 'awaiting_assignment',
     created_at: '2024-01-15T10:30:00Z',
     updated_at: '2024-01-15T14:45:00Z',
-    otp_code: '123456'
+    otp_code: '123456',
+    collect_payment: false
   },
   {
     id: '2',
@@ -38,7 +39,9 @@ export const mockDeliveries: Delivery[] = [
     assigned_rider_id: 'rider-2',
     assigned_at: '2024-01-16T09:15:00Z',
     picked_up_at: '2024-01-16T09:45:00Z',
-    otp_code: '789012'
+    otp_code: '789012',
+    collect_payment: true,
+    amount_to_collect: 450000
   },
   {
     id: '3',
@@ -58,7 +61,8 @@ export const mockDeliveries: Delivery[] = [
     updated_at: '2024-01-16T11:30:00Z',
     assigned_rider_id: 'rider-3',
     assigned_at: '2024-01-16T11:35:00Z',
-    otp_code: '345678'
+    otp_code: '345678',
+    collect_payment: false
   },
   {
     id: '4',
@@ -80,7 +84,12 @@ export const mockDeliveries: Delivery[] = [
     assigned_at: '2024-01-16T08:20:00Z',
     picked_up_at: '2024-01-16T09:00:00Z',
     delivered_at: '2024-01-16T14:30:00Z',
-    otp_code: '901234'
+    otp_code: '901234',
+    collect_payment: true,
+    amount_to_collect: 850000,
+    amount_collected: 850000,
+    collection_status: 'collected',
+    collected_at: '2024-01-16T14:30:00Z'
   },
   {
     id: '5',
@@ -102,7 +111,8 @@ export const mockDeliveries: Delivery[] = [
     assigned_at: '2024-01-15T14:10:00Z',
     picked_up_at: '2024-01-15T14:30:00Z',
     delivered_at: '2024-01-15T17:00:00Z',
-    otp_code: '567890'
+    otp_code: '567890',
+    collect_payment: false
   },
   {
     id: '6',
@@ -126,7 +136,8 @@ export const mockDeliveries: Delivery[] = [
     delivered_at: '2024-01-15T17:00:00Z',
     failure_reason: 'Customer was not available at the address. Called multiple times but no answer.',
     rider_notes: 'Customer was not available at the address. Called multiple times but no answer.',
-    otp_code: '111222'
+    otp_code: '111222',
+    collect_payment: false
   }
 ];
 

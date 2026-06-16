@@ -21,6 +21,11 @@ export interface Delivery {
   failure_reason?: string;
   rider_notes?: string;
   otp_code?: string;
+  collect_payment: boolean;
+  amount_to_collect?: number;
+  amount_collected?: number;
+  collection_status?: CollectionStatus;
+  collected_at?: string;
 }
 
 export type DeliveryStatus = 
@@ -29,6 +34,11 @@ export type DeliveryStatus =
   | 'in_transit'
   | 'delivered'
   | 'failed';
+
+export type CollectionStatus = 
+  | 'pending'
+  | 'collected'
+  | 'not_collected';
 
 export type PaymentMethod = 
   | 'orange_money'
@@ -89,6 +99,8 @@ export interface CreateDeliveryRequest {
   delivery_latitude: number;
   delivery_longitude: number;
   payment_method: PaymentMethod;
+  collect_payment: boolean;
+  amount_to_collect?: number;
 }
 
 export interface DeliveryCostCalculation {
