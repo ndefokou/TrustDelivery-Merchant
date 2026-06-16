@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Truck, Clock, ShieldAlert, XCircle } from 'lucide-react';
+import { Clock, ShieldAlert, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -144,7 +144,7 @@ const PendingApprovalPage: React.FC = () => {
 
         {/* Branding */}
         <div className="flex items-center justify-center mt-6 sm:mt-8 space-x-2">
-          <Truck className="w-4 h-4 text-slate-500" />
+          <img src="/logo192.png" alt="TrustDelivery" className="w-4 h-4 rounded object-contain" />
           <span className="text-xs text-slate-500">TrustDelivery Merchant Portal</span>
         </div>
       </div>

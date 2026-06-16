@@ -48,9 +48,7 @@ const LoginPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <Link to="/welcome" className="inline-flex items-center justify-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/30">
-              <Truck className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo192.png" alt="TrustDelivery" className="w-12 h-12 rounded-xl shadow-xl shadow-orange-500/30 object-contain bg-white" />
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Welcome back</h1>
           <p className="text-slate-400 mt-1.5 text-sm sm:text-base">Sign in to your merchant account</p>

@@ -94,11 +94,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Logo Section */}
         <div className="flex items-center h-16 px-6 border-b border-slate-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo192.png" alt="TrustDelivery" className="w-10 h-10 rounded-xl shadow-lg shadow-orange-500/30 object-contain bg-white" />
             <div>
-              <h1 className="text-lg font-bold text-white">Trida</h1>
+              <h1 className="text-lg font-bold text-white">TrustDelivery</h1>
               <p className="text-xs text-slate-400">Merchant Portal</p>
             </div>
           </div>
@@ -184,10 +182,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             <div className="flex-1 lg:flex-none">
               <h1 className="text-lg font-bold text-gray-900 lg:hidden flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center">
-                  <Truck className="w-4 h-4 text-white" />
-                </div>
-                Trida
+                <img src="/logo192.png" alt="TrustDelivery" className="w-7 h-7 rounded-lg object-contain bg-white" />
+                TrustDelivery
               </h1>
             </div>
 

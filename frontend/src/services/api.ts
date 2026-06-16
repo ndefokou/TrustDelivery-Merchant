@@ -134,10 +134,10 @@ export async function createDelivery(request: CreateDeliveryRequest): Promise<De
   });
 }
 
-export async function calculateDeliveryCost(addressId: string): Promise<DeliveryCostCalculation> {
+export async function calculateDeliveryCost(latitude: number, longitude: number): Promise<DeliveryCostCalculation> {
   return fetchApi<DeliveryCostCalculation>('/api/deliveries/calculate-cost', {
     method: 'POST',
-    body: JSON.stringify({ address_id: addressId }),
+    body: JSON.stringify({ latitude, longitude }),
   });
 }
 

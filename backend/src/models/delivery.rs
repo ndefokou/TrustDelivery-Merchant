@@ -4,9 +4,8 @@ use sqlx::FromRow;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "delivery_status", rename_all = "snake_case")]
 pub enum DeliveryStatus {
     AwaitingAssignment,
     Assigned,
@@ -37,10 +36,10 @@ impl std::str::FromStr for DeliveryStatus {
     type Err = String;
     
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "awaiting_assignment" => Ok(Self::AwaitingAssignment),
+        match s.to_lowercase().as_str() {
+            "awaiting_assignment" | "awaiting assignment" => Ok(Self::AwaitingAssignment),
             "assigned" => Ok(Self::Assigned),
-            "in_transit" => Ok(Self::InTransit),
+            "in_transit" | "in transit" => Ok(Self::InTransit),
             "delivered" => Ok(Self::Delivered),
             "failed" => Ok(Self::Failed),
             _ => Err(format!("Unknown delivery status: {}", s)),
@@ -60,9 +59,8 @@ impl From<&str> for DeliveryStatus {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "payment_method", rename_all = "snake_case")]
 pub enum PaymentMethod {
     OrangeMoney,
     MtnMomo,
@@ -104,54 +102,7 @@ impl From<&str> for PaymentMethod {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "failure_reason", rename_all = "snake_case")]
-#[allow(dead_code)]
-pub enum FailureReason {
-    CustomerUnavailable,
-    WrongAddress,
-    PhoneUnreachable,
-    CustomerRefusedProduct,
-    Other,
-}
-
-impl std::fmt::Display for FailureReason {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FailureReason::CustomerUnavailable => write!(f, "Customer Unavailable"),
-            FailureReason::WrongAddress => write!(f, "Wrong Address"),
-            FailureReason::PhoneUnreachable => write!(f, "Phone Unreachable"),
-            FailureReason::CustomerRefusedProduct => write!(f, "Customer Refused Product"),
-            FailureReason::Other => write!(f, "Other"),
-        }
-    }
-}
-
-impl std::str::FromStr for FailureReason {
-    type Err = String;
-    
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "customer_unavailable" => Ok(Self::CustomerUnavailable),
-            "wrong_address" => Ok(Self::WrongAddress),
-            "phone_unreachable" => Ok(Self::PhoneUnreachable),
-            "customer_refused_product" => Ok(Self::CustomerRefusedProduct),
-            "other" => Ok(Self::Other),
-            _ => Err(format!("Unknown failure reason: {}", s)),
-        }
-    }
-}
-
-impl From<String> for FailureReason {
-    fn from(s: String) -> Self {
-        s.as_str().parse().unwrap_or(Self::Other)
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "payment_status", rename_all = "snake_case")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[allow(dead_code)]
 pub enum PaymentStatus {
     Pending,
@@ -198,7 +149,9 @@ pub struct CreateDeliveryRequest {
     #[validate(length(min = 9, max = 15, message = "Invalid phone number format"))]
     pub customer_phone: String,
     
-    pub delivery_address_id: Uuid,
+    pub delivery_address: String,
+    pub delivery_latitude: f64,
+    pub delivery_longitude: f64,
     pub payment_method: PaymentMethod,
 }
 
@@ -209,7 +162,32 @@ pub struct DeliveryCostCalculation {
     pub currency: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, FromRow)]
+pub struct DeliveryRow {
+    pub id: Uuid,
+    pub merchant_id: Uuid,
+    pub rider_id: Option<Uuid>,
+    pub customer_name: String,
+    pub customer_phone: String,
+    pub delivery_address: String,
+    pub delivery_latitude: Option<f64>,
+    pub delivery_longitude: Option<f64>,
+    pub product_description: String,
+    pub product_value: i64,
+    pub delivery_fee: i64,
+    pub otp_code: Option<String>,
+    pub status: String,
+    pub failure_reason: Option<String>,
+    pub failure_notes: Option<String>,
+    pub assigned_at: Option<DateTime<Utc>>,
+    pub started_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime<Utc>>,
+    pub expected_delivery_time: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Delivery {
     pub id: Uuid,
     pub delivery_id: String,
@@ -219,25 +197,49 @@ pub struct Delivery {
     pub currency: String,
     pub customer_name: String,
     pub customer_phone: String,
-    pub delivery_address_id: Uuid,
-    pub delivery_address_text: String,
-    pub distance_km: f64,
+    pub delivery_address: String,
+    pub delivery_latitude: Option<f64>,
+    pub delivery_longitude: Option<f64>,
     pub delivery_cost: i64,
     pub status: DeliveryStatus,
-    pub payment_method: PaymentMethod,
-    pub payment_status: PaymentStatus,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub assigned_rider_id: Option<Uuid>,
     pub assigned_at: Option<DateTime<Utc>>,
     pub picked_up_at: Option<DateTime<Utc>>,
     pub delivered_at: Option<DateTime<Utc>>,
-    pub failure_reason: Option<FailureReason>,
+    pub failure_reason: Option<String>,
     pub rider_notes: Option<String>,
     pub otp_code: Option<String>,
-    pub otp_verified: bool,
-    pub delivery_photo_url: Option<String>,
-    pub delivery_gps_coordinates: Option<String>,
+}
+
+impl From<DeliveryRow> for Delivery {
+    fn from(row: DeliveryRow) -> Self {
+        Self {
+            id: row.id,
+            delivery_id: format!("TRD-{}", &row.id.to_string()[..8].to_uppercase()),
+            merchant_id: row.merchant_id,
+            product_description: row.product_description,
+            product_value: row.product_value,
+            currency: "FCFA".to_string(),
+            customer_name: row.customer_name,
+            customer_phone: row.customer_phone,
+            delivery_address: row.delivery_address,
+            delivery_latitude: row.delivery_latitude,
+            delivery_longitude: row.delivery_longitude,
+            delivery_cost: row.delivery_fee,
+            status: row.status.parse().unwrap_or(DeliveryStatus::AwaitingAssignment),
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            assigned_rider_id: row.rider_id,
+            assigned_at: row.assigned_at,
+            picked_up_at: row.started_at,
+            delivered_at: row.completed_at,
+            failure_reason: row.failure_reason,
+            rider_notes: row.failure_notes,
+            otp_code: row.otp_code,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

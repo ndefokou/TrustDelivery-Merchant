@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Package, MapPin, Shield, ChevronRight } from 'lucide-react';
+import { Package, MapPin, Shield, ChevronRight } from 'lucide-react';
 
 const WelcomePage: React.FC = () => {
   return (
@@ -14,13 +14,11 @@ const WelcomePage: React.FC = () => {
       <div className="relative z-10 max-w-sm sm:max-w-md w-full text-center">
         {/* Logo */}
         <div className="flex items-center justify-center mb-6 sm:mb-8">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/30">
-            <Truck className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-          </div>
+          <img src="/logo512.png" alt="TrustDelivery" className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-contain bg-white shadow-xl shadow-orange-500/30" />
         </div>
 
         {/* App Name */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1.5">Trida</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1.5">TrustDelivery</h1>
         <p className="text-slate-400 text-base sm:text-lg mb-6 sm:mb-8">Merchant Portal</p>
 
         {/* Description */}

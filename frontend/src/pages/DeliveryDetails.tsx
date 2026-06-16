@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Delivery, DeliveryTimelineEvent } from '../types';
-import { formatDeliveryStatus, getStatusColor, formatPaymentMethod, formatFailureReason } from '../types';
+import { formatDeliveryStatus, getStatusColor } from '../types';
 import { getDeliveryById } from '../services/api';
 import { format } from 'date-fns';
 
@@ -211,7 +211,7 @@ const DeliveryDetails: React.FC = () => {
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                 <div className="ml-2.5 sm:ml-3">
                   <p className="text-xs text-gray-500">Delivery Address</p>
-                  <p className="text-sm font-medium text-gray-900">{delivery.delivery_address_text}</p>
+                  <p className="text-sm font-medium text-gray-900">{delivery.delivery_address}</p>
                 </div>
               </div>
             </div>
@@ -225,7 +225,7 @@ const DeliveryDetails: React.FC = () => {
                 <div className="ml-2.5 sm:ml-3">
                   <h3 className="text-sm font-medium text-red-900">Delivery Failed</h3>
                   <p className="text-xs sm:text-sm text-red-700 mt-1">
-                    Reason: {formatFailureReason(delivery.failure_reason)}
+                    Reason: {delivery.failure_reason}
                   </p>
                   {delivery.rider_notes && (
                     <div className="mt-3">
@@ -245,26 +245,8 @@ const DeliveryDetails: React.FC = () => {
               <div className="space-y-2.5">
                 <div className="flex items-center">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
-                  <span className="ml-2 text-sm text-emerald-800">OTP Verified Successfully</span>
+                  <span className="ml-2 text-sm text-emerald-800">Delivery Completed Successfully</span>
                 </div>
-                {delivery.delivery_photo_url && (
-                  <div className="mt-3">
-                    <p className="text-xs sm:text-sm font-medium text-emerald-900 mb-2">Delivery Photo:</p>
-                    <img 
-                      src={delivery.delivery_photo_url} 
-                      alt="Delivery proof" 
-                      className="rounded-xl max-w-md"
-                    />
-                  </div>
-                )}
-                {delivery.delivery_gps_coordinates && (
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0" />
-                    <span className="ml-2 text-sm text-emerald-800">
-                      GPS: {delivery.delivery_gps_coordinates}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -272,41 +254,13 @@ const DeliveryDetails: React.FC = () => {
 
         {/* Sidebar */}
         <div className="space-y-4 sm:space-y-6">
-          {/* Payment Info */}
-          <div className="mobile-card">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Payment</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Method</span>
-                <span className="text-sm font-medium">{formatPaymentMethod(delivery.payment_method)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                <span className={`text-sm font-medium ${
-                  delivery.payment_status === 'completed' ? 'text-emerald-600' : 
-                  delivery.payment_status === 'failed' ? 'text-red-600' : 'text-amber-600'
-                }`}>
-                  {delivery.payment_status.charAt(0).toUpperCase() + delivery.payment_status.slice(1)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Delivery Cost</span>
-                <span className="text-sm font-medium">{delivery.delivery_cost.toLocaleString()} {delivery.currency}</span>
-              </div>
-              <div className="flex justify-between border-t border-gray-100 pt-3">
-                <span className="text-sm text-gray-900 font-medium">Total</span>
-                <span className="text-sm text-gray-900 font-bold">{delivery.delivery_cost.toLocaleString()} {delivery.currency}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Delivery Info */}
           <div className="mobile-card">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Delivery Info</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Distance</span>
-                <span className="text-sm font-medium">{delivery.distance_km.toFixed(1)} km</span>
+                <span className="text-sm text-gray-500">Delivery Cost</span>
+                <span className="text-sm font-medium">{delivery.delivery_cost.toLocaleString()} FCFA</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-500">Created</span>

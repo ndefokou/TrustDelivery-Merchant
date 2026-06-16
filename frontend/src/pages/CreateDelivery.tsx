@@ -31,7 +31,9 @@ const CreateDelivery: React.FC = () => {
     product_value: 0,
     customer_name: '',
     customer_phone: '',
-    delivery_address_id: '',
+    delivery_address: '',
+    delivery_latitude: 0,
+    delivery_longitude: 0,
     payment_method: 'orange_money'
   });
 
@@ -60,9 +62,9 @@ const CreateDelivery: React.FC = () => {
     return () => clearTimeout(searchTimeout);
   }, [addressQuery]);
 
-  const calculateCost = useCallback(async (addressId: string) => {
+  const calculateCost = useCallback(async (lat: number, lon: number) => {
     try {
-      const cost = await calculateDeliveryCost(addressId);
+      const cost = await calculateDeliveryCost(lat, lon);
       setCalculatedCost(cost);
     } catch (err) {
       console.error('Failed to calculate cost:', err);
@@ -76,8 +78,8 @@ const CreateDelivery: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedAddress?.id) {
-      calculateCost(selectedAddress.id);
+    if (selectedAddress?.latitude && selectedAddress?.longitude) {
+      calculateCost(selectedAddress.latitude, selectedAddress.longitude);
     }
   }, [selectedAddress, calculateCost]);
 
@@ -113,7 +115,7 @@ const CreateDelivery: React.FC = () => {
       newErrors.customer_phone = 'Invalid Cameroon phone number (6XX XXX XXX)';
     }
     
-    if (!selectedAddress || !selectedAddress.id) {
+    if (!selectedAddress) {
       newErrors.delivery_address = 'Please select a valid delivery address';
     }
 
@@ -127,7 +129,9 @@ const CreateDelivery: React.FC = () => {
     setShowAddressSuggestions(false);
     setFormData(prev => ({
       ...prev,
-      delivery_address_id: address.id || ''
+      delivery_address: address.address_text,
+      delivery_latitude: address.latitude,
+      delivery_longitude: address.longitude
     }));
   };
 
@@ -498,7 +502,9 @@ const CreateDelivery: React.FC = () => {
                   product_value: 0,
                   customer_name: '',
                   customer_phone: '',
-                  delivery_address_id: '',
+                  delivery_address: '',
+                  delivery_latitude: 0,
+                  delivery_longitude: 0,
                   payment_method: 'orange_money'
                 });
                 setSelectedAddress(null);

@@ -242,7 +242,7 @@ const Dashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-600">
-                      {delivery.delivery_address_text}
+                      {delivery.delivery_address}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

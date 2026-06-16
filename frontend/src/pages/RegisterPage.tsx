@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Truck, Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, Store, User, Lock, FileText } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, Store, User, Lock, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BusinessType, BUSINESS_TYPE_LABELS } from '../types';
 
@@ -430,9 +430,7 @@ const RegisterPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-5 sm:mb-6">
           <Link to="/welcome" className="inline-flex items-center justify-center mb-3">
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center shadow-xl shadow-orange-500/30">
-              <Truck className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo192.png" alt="TrustDelivery" className="w-12 h-12 rounded-xl shadow-xl shadow-orange-500/30 object-contain bg-white" />
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Create your account</h1>
           <p className="text-slate-400 mt-1 text-sm sm:text-base">Start managing your deliveries today</p>

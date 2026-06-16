@@ -7,25 +7,20 @@ export interface Delivery {
   currency: string;
   customer_name: string;
   customer_phone: string;
-  delivery_address_id: string;
-  delivery_address_text: string;
-  distance_km: number;
+  delivery_address: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
   delivery_cost: number;
   status: DeliveryStatus;
-  payment_method: PaymentMethod;
-  payment_status: PaymentStatus;
   created_at: string;
   updated_at: string;
   assigned_rider_id?: string;
   assigned_at?: string;
   picked_up_at?: string;
   delivered_at?: string;
-  failure_reason?: FailureReason;
+  failure_reason?: string;
   rider_notes?: string;
   otp_code?: string;
-  otp_verified: boolean;
-  delivery_photo_url?: string;
-  delivery_gps_coordinates?: string;
 }
 
 export type DeliveryStatus = 
@@ -39,18 +34,6 @@ export type PaymentMethod =
   | 'orange_money'
   | 'mtn_momo'
   | 'merchant_wallet';
-
-export type PaymentStatus = 
-  | 'pending'
-  | 'completed'
-  | 'failed';
-
-export type FailureReason = 
-  | 'customer_unavailable'
-  | 'wrong_address'
-  | 'phone_unreachable'
-  | 'customer_refused_product'
-  | 'other';
 
 export interface DeliveryListResponse {
   deliveries: Delivery[];
@@ -102,7 +85,9 @@ export interface CreateDeliveryRequest {
   product_value: number;
   customer_name: string;
   customer_phone: string;
-  delivery_address_id: string;
+  delivery_address: string;
+  delivery_latitude: number;
+  delivery_longitude: number;
   payment_method: PaymentMethod;
 }
 
@@ -217,23 +202,6 @@ export const formatPaymentMethod = (method: PaymentMethod): string => {
       return 'Merchant Wallet';
     default:
       return method;
-  }
-};
-
-export const formatFailureReason = (reason: FailureReason): string => {
-  switch (reason) {
-    case 'customer_unavailable':
-      return 'Customer Unavailable';
-    case 'wrong_address':
-      return 'Wrong Address';
-    case 'phone_unreachable':
-      return 'Phone Unreachable';
-    case 'customer_refused_product':
-      return 'Customer Refused Product';
-    case 'other':
-      return 'Other';
-    default:
-      return reason;
   }
 };
 

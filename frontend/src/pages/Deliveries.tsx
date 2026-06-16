@@ -82,7 +82,7 @@ const Deliveries: React.FC = () => {
       delivery.delivery_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       delivery.product_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      delivery.delivery_address_text.toLowerCase().includes(searchQuery.toLowerCase());
+      delivery.delivery_address.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -188,8 +188,6 @@ const Deliveries: React.FC = () => {
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="text-xs text-gray-500">{delivery.customer_name}</span>
                   <span className="text-gray-300">·</span>
-                  <span className="text-xs text-gray-500">{delivery.distance_km.toFixed(1)} km</span>
-                  <span className="text-gray-300">·</span>
                   <span className="text-xs font-medium text-gray-700">{delivery.delivery_cost.toLocaleString()} FCFA</span>
                 </div>
               </div>
@@ -214,9 +212,6 @@ const Deliveries: React.FC = () => {
                 </th>
                 <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Address
-                </th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Distance
                 </th>
                 <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Cost
@@ -254,12 +249,7 @@ const Deliveries: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-600 truncate max-w-xs block">
-                      {delivery.delivery_address_text}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
-                      {delivery.distance_km.toFixed(1)} km
+                      {delivery.delivery_address}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

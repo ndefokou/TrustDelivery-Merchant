@@ -18,11 +18,11 @@ pub async fn get_deliveries(
     let page = query.page.unwrap_or(1);
     let per_page = query.per_page.unwrap_or(10);
     let status_filter = query.status.as_ref().and_then(|s| match s.as_str() {
-        "awaiting_assignment" => Some(DeliveryStatus::AwaitingAssignment),
-        "assigned" => Some(DeliveryStatus::Assigned),
-        "in_transit" => Some(DeliveryStatus::InTransit),
-        "delivered" => Some(DeliveryStatus::Delivered),
-        "failed" => Some(DeliveryStatus::Failed),
+        "awaiting_assignment" | "AWAITING_ASSIGNMENT" => Some(DeliveryStatus::AwaitingAssignment),
+        "assigned" | "ASSIGNED" => Some(DeliveryStatus::Assigned),
+        "in_transit" | "IN_TRANSIT" => Some(DeliveryStatus::InTransit),
+        "delivered" | "DELIVERED" => Some(DeliveryStatus::Delivered),
+        "failed" | "FAILED" => Some(DeliveryStatus::Failed),
         _ => None,
     });
 
@@ -39,12 +39,10 @@ pub async fn create_delivery(
 ) -> HttpResponse {
     let request = body.into_inner();
 
-    // Validate input
     if let Err(e) = request.validate() {
         return HttpResponse::BadRequest().json(ApiError::new(&format!("Validation error: {}", e)));
     }
 
-    // Validate Cameroon phone number
     if !is_valid_cameroon_phone(&request.customer_phone) {
         return HttpResponse::BadRequest().json(ApiError::new("Invalid Cameroon phone number format"));
     }
@@ -90,7 +88,7 @@ pub async fn calculate_delivery_cost(
 ) -> HttpResponse {
     let request = body.into_inner();
 
-    match delivery_service::calculate_cost(&pool, *merchant_id, request.address_id).await {
+    match delivery_service::calculate_cost(&pool, *merchant_id, request.latitude, request.longitude).await {
         Ok(calculation) => HttpResponse::Ok().json(ApiResponse::success(calculation)),
         Err(e) => HttpResponse::InternalServerError().json(ApiError::new(&e.to_string())),
     }
@@ -109,7 +107,6 @@ pub async fn get_delivery_timeline(
 }
 
 fn is_valid_cameroon_phone(phone: &str) -> bool {
-    // Cameroon phone numbers: 9 digits starting with 6XX
     let phone = phone.replace("+237", "").replace(" ", "");
     phone.len() == 9 && phone.starts_with('6')
 }
@@ -129,5 +126,6 @@ pub struct MerchantIdParam {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct CalculateCostRequest {
-    pub address_id: Uuid,
+    pub latitude: f64,
+    pub longitude: f64,
 }
