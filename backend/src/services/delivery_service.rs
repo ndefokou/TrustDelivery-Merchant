@@ -152,10 +152,11 @@ pub async fn create_delivery(
         INSERT INTO deliveries (
             merchant_id, customer_name, customer_phone,
             delivery_address, delivery_latitude, delivery_longitude,
+            delivery_address_text, distance_km,
             product_description, product_value, delivery_cost,
             otp_code, status, assigned_at, started_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'AWAITING_ASSIGNMENT', NULL, NULL)
+        VALUES ($1, $2, $3, $4, $5, $6, $4, $7, $8, $9, $10, $11, 'AWAITING_ASSIGNMENT', NULL, NULL)
         RETURNING id, merchant_id, rider_id, customer_name, customer_phone,
                   delivery_address, delivery_latitude, delivery_longitude,
                   product_description, product_value, delivery_cost, otp_code,
@@ -169,6 +170,7 @@ pub async fn create_delivery(
     .bind(&request.delivery_address)
     .bind(request.delivery_latitude)
     .bind(request.delivery_longitude)
+    .bind(distance_km)
     .bind(&request.product_description)
     .bind(request.product_value)
     .bind(delivery_cost)

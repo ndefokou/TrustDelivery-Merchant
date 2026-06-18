@@ -174,12 +174,15 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
             currency VARCHAR(10) NOT NULL DEFAULT 'FCFA',
             customer_name VARCHAR(100) NOT NULL,
             customer_phone VARCHAR(20) NOT NULL,
-            delivery_address_id UUID NOT NULL REFERENCES addresses(id),
+            delivery_address_id UUID REFERENCES addresses(id),
             delivery_address_text TEXT NOT NULL,
-            distance_km DOUBLE PRECISION NOT NULL,
-            delivery_cost BIGINT NOT NULL,
+            delivery_address TEXT NOT NULL DEFAULT '',
+            delivery_latitude DOUBLE PRECISION,
+            delivery_longitude DOUBLE PRECISION,
+            distance_km DOUBLE PRECISION NOT NULL DEFAULT 0,
+            delivery_cost BIGINT NOT NULL DEFAULT 0,
             status delivery_status NOT NULL DEFAULT 'awaiting_assignment',
-            payment_method payment_method NOT NULL,
+            payment_method payment_method NOT NULL DEFAULT 'orange_money',
             payment_status payment_status NOT NULL DEFAULT 'pending',
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -192,8 +195,72 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
             otp_code VARCHAR(6),
             otp_verified BOOLEAN NOT NULL DEFAULT false,
             delivery_photo_url TEXT,
-            delivery_gps_coordinates VARCHAR(100)
+            delivery_gps_coordinates VARCHAR(100),
+            collect_payment BOOLEAN NOT NULL DEFAULT false,
+            amount_to_collect BIGINT,
+            amount_collected BIGINT,
+            collection_status VARCHAR(20),
+            collected_at TIMESTAMPTZ
         );
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Alter existing columns if they have wrong types
+    sqlx::query(
+        r#"
+        DO $$ BEGIN
+            -- Alter delivery_cost if it's NUMERIC to BIGINT
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'deliveries' 
+                AND column_name = 'delivery_cost' 
+                AND data_type = 'NUMERIC'
+            ) THEN
+                ALTER TABLE deliveries ALTER COLUMN delivery_cost TYPE BIGINT USING delivery_cost::BIGINT;
+            END IF;
+            
+            -- Alter product_value if it's NUMERIC to BIGINT
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'deliveries' 
+                AND column_name = 'product_value' 
+                AND data_type = 'NUMERIC'
+            ) THEN
+                ALTER TABLE deliveries ALTER COLUMN product_value TYPE BIGINT USING product_value::BIGINT;
+            END IF;
+            
+            -- Alter delivery_latitude if it's NUMERIC to DOUBLE PRECISION
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'deliveries' 
+                AND column_name = 'delivery_latitude' 
+                AND data_type = 'NUMERIC'
+            ) THEN
+                ALTER TABLE deliveries ALTER COLUMN delivery_latitude TYPE DOUBLE PRECISION USING delivery_latitude::DOUBLE PRECISION;
+            END IF;
+            
+            -- Alter delivery_longitude if it's NUMERIC to DOUBLE PRECISION
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'deliveries' 
+                AND column_name = 'delivery_longitude' 
+                AND data_type = 'NUMERIC'
+            ) THEN
+                ALTER TABLE deliveries ALTER COLUMN delivery_longitude TYPE DOUBLE PRECISION USING delivery_longitude::DOUBLE PRECISION;
+            END IF;
+            
+            -- Alter distance_km if it's NUMERIC to DOUBLE PRECISION
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'deliveries' 
+                AND column_name = 'distance_km' 
+                AND data_type = 'NUMERIC'
+            ) THEN
+                ALTER TABLE deliveries ALTER COLUMN distance_km TYPE DOUBLE PRECISION USING distance_km::DOUBLE PRECISION;
+            END IF;
+        END $$;
         "#,
     )
     .execute(pool)
