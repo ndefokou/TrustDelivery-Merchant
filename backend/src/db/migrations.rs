@@ -186,12 +186,12 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
             payment_status payment_status NOT NULL DEFAULT 'pending',
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            assigned_rider_id UUID,
+            assigned_carrier_id UUID,
             assigned_at TIMESTAMPTZ,
             picked_up_at TIMESTAMPTZ,
             delivered_at TIMESTAMPTZ,
             failure_reason failure_reason,
-            rider_notes TEXT,
+            carrier_notes TEXT,
             otp_code VARCHAR(6),
             otp_verified BOOLEAN NOT NULL DEFAULT false,
             delivery_photo_url TEXT,
@@ -207,61 +207,16 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    // Alter existing columns if they have wrong types
+    // Alter existing columns if they have wrong types (force alter without checking)
     sqlx::query(
         r#"
-        DO $$ BEGIN
-            -- Alter delivery_cost if it's NUMERIC to BIGINT
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'deliveries' 
-                AND column_name = 'delivery_cost' 
-                AND data_type = 'NUMERIC'
-            ) THEN
-                ALTER TABLE deliveries ALTER COLUMN delivery_cost TYPE BIGINT USING delivery_cost::BIGINT;
-            END IF;
-            
-            -- Alter product_value if it's NUMERIC to BIGINT
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'deliveries' 
-                AND column_name = 'product_value' 
-                AND data_type = 'NUMERIC'
-            ) THEN
-                ALTER TABLE deliveries ALTER COLUMN product_value TYPE BIGINT USING product_value::BIGINT;
-            END IF;
-            
-            -- Alter delivery_latitude if it's NUMERIC to DOUBLE PRECISION
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'deliveries' 
-                AND column_name = 'delivery_latitude' 
-                AND data_type = 'NUMERIC'
-            ) THEN
-                ALTER TABLE deliveries ALTER COLUMN delivery_latitude TYPE DOUBLE PRECISION USING delivery_latitude::DOUBLE PRECISION;
-            END IF;
-            
-            -- Alter delivery_longitude if it's NUMERIC to DOUBLE PRECISION
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'deliveries' 
-                AND column_name = 'delivery_longitude' 
-                AND data_type = 'NUMERIC'
-            ) THEN
-                ALTER TABLE deliveries ALTER COLUMN delivery_longitude TYPE DOUBLE PRECISION USING delivery_longitude::DOUBLE PRECISION;
-            END IF;
-            
-            -- Alter distance_km if it's NUMERIC to DOUBLE PRECISION
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'deliveries' 
-                AND column_name = 'distance_km' 
-                AND data_type = 'NUMERIC'
-            ) THEN
-                ALTER TABLE deliveries ALTER COLUMN distance_km TYPE DOUBLE PRECISION USING distance_km::DOUBLE PRECISION;
-            END IF;
-        END $$;
-        "#,
+        ALTER TABLE deliveries 
+        ALTER COLUMN delivery_cost TYPE BIGINT USING COALESCE(delivery_cost::NUMERIC::BIGINT, 0),
+        ALTER COLUMN product_value TYPE BIGINT USING COALESCE(product_value::NUMERIC::BIGINT, 0),
+        ALTER COLUMN delivery_latitude TYPE DOUBLE PRECISION USING COALESCE(delivery_latitude::NUMERIC::DOUBLE PRECISION, 0),
+        ALTER COLUMN delivery_longitude TYPE DOUBLE PRECISION USING COALESCE(delivery_longitude::NUMERIC::DOUBLE PRECISION, 0),
+        ALTER COLUMN distance_km TYPE DOUBLE PRECISION USING COALESCE(distance_km::NUMERIC::DOUBLE PRECISION, 0)
+        "#
     )
     .execute(pool)
     .await?;
@@ -444,7 +399,7 @@ async fn seed_demo_data(pool: &PgPool) -> Result<(), sqlx::Error> {
             None
         };
         
-        let rider_notes = if status == "failed" {
+        let carrier_notes = if status == "failed" {
             Some("Customer was not available at the address. Called multiple times but no answer.")
         } else {
             None
@@ -456,7 +411,7 @@ async fn seed_demo_data(pool: &PgPool) -> Result<(), sqlx::Error> {
                 delivery_id, merchant_id, product_description, product_value, currency,
                 customer_name, customer_phone, delivery_address_id, delivery_address_text,
                 distance_km, delivery_cost, status, payment_method, payment_status,
-                assigned_at, picked_up_at, delivered_at, failure_reason, rider_notes, otp_verified
+                assigned_at, picked_up_at, delivered_at, failure_reason, carrier_notes, otp_verified
             )
             VALUES ($1, '00000000-0000-0000-0000-000000000001', $2, $3, 'FCFA', $4, $5, $6, $7, $8, $9, $10::delivery_status, $11::payment_method, $12::payment_status, $13, $14, $15, $16::failure_reason, $17,
                 CASE WHEN $15 IS NOT NULL THEN true ELSE false END)
@@ -478,7 +433,7 @@ async fn seed_demo_data(pool: &PgPool) -> Result<(), sqlx::Error> {
         .bind(picked_up_at)
         .bind(delivered_at)
         .bind(failure_reason)
-        .bind(rider_notes)
+        .bind(carrier_notes)
         .execute(pool)
         .await?;
     }

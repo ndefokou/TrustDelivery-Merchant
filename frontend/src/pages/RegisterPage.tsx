@@ -389,7 +389,7 @@ const RegisterPage: React.FC = () => {
 
       <div className="bg-slate-900/50 border border-slate-600/50 rounded-xl p-4 max-h-40 sm:max-h-48 overflow-y-auto text-sm text-slate-300 space-y-3">
         <p><strong className="text-white">1. Service Agreement</strong><br />
-        By using TrustDelivery, you agree to use our delivery services in accordance with applicable laws and regulations. TrustDelivery acts as an intermediary between merchants and delivery riders.</p>
+        By using TrustDelivery, you agree to use our delivery services in accordance with applicable laws and regulations. TrustDelivery acts as an intermediary between merchants and delivery carriers.</p>
         
         <p><strong className="text-white">2. Account Responsibility</strong><br />
         You are responsible for maintaining the confidentiality of your account credentials. Any activity under your account is your responsibility.</p>

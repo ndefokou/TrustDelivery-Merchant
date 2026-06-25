@@ -14,12 +14,12 @@ export interface Delivery {
   status: DeliveryStatus;
   created_at: string;
   updated_at: string;
-  assigned_rider_id?: string;
+  assigned_carrier_id?: string;
   assigned_at?: string;
   picked_up_at?: string;
   delivered_at?: string;
   failure_reason?: string;
-  rider_notes?: string;
+  carrier_notes?: string;
   otp_code?: string;
   collect_payment: boolean;
   amount_to_collect?: number;
@@ -190,7 +190,7 @@ export interface AuthResponse {
 export const formatDeliveryStatus = (status: DeliveryStatus): string => {
   switch (status) {
     case 'awaiting_assignment':
-      return 'Awaiting Assignment';
+      return 'Pending';
     case 'assigned':
       return 'Assigned';
     case 'in_transit':

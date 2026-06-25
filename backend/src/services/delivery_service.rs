@@ -12,6 +12,54 @@ fn generate_otp() -> String {
     format!("{:04}", rand::thread_rng().gen_range(1000..9999))
 }
 
+/// Find the best available carrier for auto-assignment
+/// Priority: performance_score DESC, completed_deliveries DESC, failed_deliveries ASC
+pub async fn find_best_carrier(
+    pool: &PgPool,
+) -> Result<Option<(Uuid, String)>, sqlx::Error> {
+    let result = sqlx::query_as::<_, (Option<Uuid>, Option<String>)>(
+        r#"
+        SELECT r.id, r.full_name
+        FROM carriers r
+        WHERE 
+            COALESCE(LOWER(r.status::text), CASE WHEN r.is_active THEN 'active' ELSE 'suspended' END) = 'active'
+            AND COALESCE(r.is_verified, true) = true
+            AND r.id NOT IN (
+                SELECT COALESCE(assigned_carrier_id, carrier_id) FROM deliveries 
+                WHERE COALESCE(assigned_carrier_id, carrier_id) IS NOT NULL 
+                AND LOWER(status::text) IN ('assigned', 'in_transit')
+            )
+        ORDER BY 
+            r.performance_score DESC NULLS LAST,
+            r.completed_deliveries DESC,
+            r.failed_deliveries ASC
+        LIMIT 1
+        "#
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(result.and_then(|(id, name)| {
+        match (id, name) {
+            (Some(id), Some(name)) => Some((id, name)),
+            _ => None,
+        }
+    }))
+}
+
+/// Get count of active deliveries for a carrier
+pub async fn get_carrier_active_deliveries(
+    pool: &PgPool,
+    carrier_id: Uuid,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT COUNT(*) FROM deliveries WHERE assigned_carrier_id = $1 AND LOWER(status::text) IN ('awaiting_assignment', 'assigned', 'in_transit')"
+    )
+    .bind(carrier_id)
+    .fetch_one(pool)
+    .await
+}
+
 pub async fn get_deliveries(
     pool: &PgPool,
     merchant_id: Uuid,
@@ -22,23 +70,23 @@ pub async fn get_deliveries(
     let offset = (page - 1) * per_page;
     
     let status_str = status_filter.as_ref().map(|s| match s {
-        DeliveryStatus::AwaitingAssignment => "AWAITING_ASSIGNMENT",
-        DeliveryStatus::Assigned => "ASSIGNED",
-        DeliveryStatus::InTransit => "IN_TRANSIT",
-        DeliveryStatus::Delivered => "DELIVERED",
-        DeliveryStatus::Failed => "FAILED",
+        DeliveryStatus::AwaitingAssignment => "awaiting_assignment",
+        DeliveryStatus::Assigned => "assigned",
+        DeliveryStatus::InTransit => "in_transit",
+        DeliveryStatus::Delivered => "delivered",
+        DeliveryStatus::Failed => "failed",
     });
 
     let rows: Vec<DeliveryRow> = if let Some(status) = status_str {
         sqlx::query_as::<_, DeliveryRow>(
             r#"
-            SELECT id, merchant_id, rider_id, customer_name, customer_phone,
+            SELECT id, merchant_id, assigned_carrier_id, customer_name, customer_phone,
                    delivery_address, delivery_latitude, delivery_longitude,
                    product_description, product_value, delivery_cost, otp_code,
                    status, failure_reason, failure_notes, assigned_at, started_at,
                    completed_at, expected_delivery_time, created_at, updated_at
             FROM deliveries
-            WHERE merchant_id = $1 AND status = $2
+            WHERE merchant_id = $1 AND LOWER(status::text) = $2
             ORDER BY created_at DESC
             LIMIT $3 OFFSET $4
             "#
@@ -52,7 +100,7 @@ pub async fn get_deliveries(
     } else {
         sqlx::query_as::<_, DeliveryRow>(
             r#"
-            SELECT id, merchant_id, rider_id, customer_name, customer_phone,
+            SELECT id, merchant_id, assigned_carrier_id, customer_name, customer_phone,
                    delivery_address, delivery_latitude, delivery_longitude,
                    product_description, product_value, delivery_cost, otp_code,
                    status, failure_reason, failure_notes, assigned_at, started_at,
@@ -72,7 +120,7 @@ pub async fn get_deliveries(
 
     let total: i64 = if let Some(status) = status_str {
         sqlx::query_scalar(
-            "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND status = $2"
+            "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND LOWER(status::text) = $2"
         )
         .bind(merchant_id)
         .bind(status)
@@ -106,7 +154,7 @@ pub async fn get_delivery_by_id(
 ) -> Result<Option<Delivery>, sqlx::Error> {
     let row: Option<DeliveryRow> = sqlx::query_as::<_, DeliveryRow>(
         r#"
-        SELECT id, merchant_id, rider_id, customer_name, customer_phone,
+        SELECT id, merchant_id, assigned_carrier_id, customer_name, customer_phone,
                delivery_address, delivery_latitude, delivery_longitude,
                product_description, product_value, delivery_cost, otp_code,
                status, failure_reason, failure_notes, assigned_at, started_at,
@@ -147,17 +195,32 @@ pub async fn create_delivery(
     
     let otp_code = generate_otp();
 
+    // Try to auto-assign the best available carrier
+    let best_carrier = find_best_carrier(pool).await.ok().flatten();
+    
+    let (carrier_id, status, assigned_at): (Option<Uuid>, &str, Option<chrono::DateTime<chrono::Utc>>) = 
+        match best_carrier {
+            Some((carrier_id, _carrier_name)) => {
+                // Successfully found a carrier - assign immediately
+                (Some(carrier_id), "assigned", Some(chrono::Utc::now()))
+            },
+            None => {
+                // No carrier available - keep in awaiting status
+                (None, "awaiting_assignment", None)
+            }
+        };
+
     let row: DeliveryRow = sqlx::query_as::<_, DeliveryRow>(
         r#"
         INSERT INTO deliveries (
-            merchant_id, customer_name, customer_phone,
+            merchant_id, assigned_carrier_id, customer_name, customer_phone,
             delivery_address, delivery_latitude, delivery_longitude,
             delivery_address_text, distance_km,
             product_description, product_value, delivery_cost,
             otp_code, status, assigned_at, started_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $4, $7, $8, $9, $10, $11, 'AWAITING_ASSIGNMENT', NULL, NULL)
-        RETURNING id, merchant_id, rider_id, customer_name, customer_phone,
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $8, $9, $10, $11, $12, $13, $14, NULL)
+        RETURNING id, merchant_id, assigned_carrier_id, customer_name, customer_phone,
                   delivery_address, delivery_latitude, delivery_longitude,
                   product_description, product_value, delivery_cost, otp_code,
                   status, failure_reason, failure_notes, assigned_at, started_at,
@@ -165,6 +228,7 @@ pub async fn create_delivery(
         "#
     )
     .bind(merchant_id)
+    .bind(carrier_id)
     .bind(&request.customer_name)
     .bind(&request.customer_phone)
     .bind(&request.delivery_address)
@@ -175,6 +239,8 @@ pub async fn create_delivery(
     .bind(request.product_value)
     .bind(delivery_cost)
     .bind(&otp_code)
+    .bind(status)
+    .bind(assigned_at)
     .fetch_one(pool)
     .await?;
 
@@ -193,28 +259,28 @@ pub async fn get_delivery_stats(
     .await?;
 
     let awaiting_assignment: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND status = 'AWAITING_ASSIGNMENT'"
+        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND LOWER(status::text) = 'awaiting_assignment'"
     )
     .bind(merchant_id)
     .fetch_one(pool)
     .await?;
 
     let in_transit: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND status = 'IN_TRANSIT'"
+        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND LOWER(status::text) = 'in_transit'"
     )
     .bind(merchant_id)
     .fetch_one(pool)
     .await?;
 
     let delivered: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND status = 'DELIVERED'"
+        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND LOWER(status::text) = 'delivered'"
     )
     .bind(merchant_id)
     .fetch_one(pool)
     .await?;
 
     let failed: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND status = 'FAILED'"
+        "SELECT COUNT(*) FROM deliveries WHERE merchant_id = $1 AND LOWER(status::text) = 'failed'"
     )
     .bind(merchant_id)
     .fetch_one(pool)
@@ -297,16 +363,16 @@ pub async fn get_delivery_timeline(
     timeline.push(DeliveryTimelineEvent {
         status: "Awaiting Assignment".to_string(),
         timestamp: created_at,
-        description: "Waiting for rider assignment".to_string(),
-        completed: matches!(status.as_str(), "AWAITING_ASSIGNMENT" | "ASSIGNED" | "IN_TRANSIT" | "DELIVERED"),
+        description: "Waiting for carrier assignment".to_string(),
+        completed: matches!(status.to_lowercase().as_str(), "awaiting_assignment" | "assigned" | "in_transit" | "delivered"),
     });
 
     if let Some(assigned_at) = assigned_at {
         timeline.push(DeliveryTimelineEvent {
             status: "Assigned".to_string(),
             timestamp: assigned_at,
-            description: "Rider assigned to delivery".to_string(),
-            completed: matches!(status.as_str(), "ASSIGNED" | "IN_TRANSIT" | "DELIVERED"),
+            description: "Carrier assigned to delivery".to_string(),
+            completed: matches!(status.to_lowercase().as_str(), "assigned" | "in_transit" | "delivered"),
         });
     }
 
@@ -315,7 +381,7 @@ pub async fn get_delivery_timeline(
             status: "In Transit".to_string(),
             timestamp: started_at,
             description: "Package picked up, in transit".to_string(),
-            completed: matches!(status.as_str(), "IN_TRANSIT" | "DELIVERED"),
+            completed: matches!(status.to_lowercase().as_str(), "in_transit" | "delivered"),
         });
     }
 
@@ -324,7 +390,7 @@ pub async fn get_delivery_timeline(
             status: "Delivered".to_string(),
             timestamp: completed_at,
             description: "Package delivered successfully".to_string(),
-            completed: matches!(status.as_str(), "DELIVERED"),
+            completed: matches!(status.to_lowercase().as_str(), "delivered"),
         });
     }
 

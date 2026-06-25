@@ -9,7 +9,8 @@ import {
   ArrowUpRight,
   Box,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  Banknote
 } from 'lucide-react';
 import { Delivery, DeliveryStatus, DeliveryStats } from '../types';
 import { getDeliveries, getDeliveryStats } from '../services/api';
@@ -61,7 +62,7 @@ const Dashboard: React.FC = () => {
     };
 
     const labels = {
-      awaiting_assignment: 'Awaiting',
+      awaiting_assignment: 'Pending',
       assigned: 'Assigned',
       in_transit: 'In Transit',
       delivered: 'Delivered',
@@ -107,8 +108,8 @@ const Dashboard: React.FC = () => {
   }
 
   const statCards = [
-    { label: 'Active', value: stats.active_deliveries, icon: Box, color: 'bg-slate-100 text-slate-600' },
-    { label: 'Awaiting', value: stats.awaiting_assignment, icon: Clock, color: 'bg-amber-100 text-amber-600' },
+    { label: 'Total', value: stats.total_deliveries, icon: Box, color: 'bg-slate-100 text-slate-600' },
+    { label: 'Pending', value: stats.awaiting_assignment, icon: Clock, color: 'bg-amber-100 text-amber-600' },
     { label: 'In Transit', value: stats.in_transit, icon: Truck, color: 'bg-orange-100 text-orange-600' },
     { label: 'Delivered', value: stats.delivered, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600' },
     { label: 'Failed', value: stats.failed, icon: XCircle, color: 'bg-red-100 text-red-600' },
@@ -120,12 +121,14 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <p className="text-sm text-gray-500">Welcome back</p>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Operations overview</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
         </div>
-        <div className="hidden sm:flex items-center text-sm text-emerald-600">
-          <TrendingUp className="w-4 h-4 mr-1" />
-          <span>+12% on-time deliveries this week</span>
-        </div>
+        <Link
+          to="/create-delivery"
+          className="inline-flex items-center px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors text-sm font-medium shadow-sm"
+        >
+          Create Delivery
+        </Link>
       </div>
 
       {/* Stats Cards - Scrollable on mobile */}
@@ -144,15 +147,28 @@ const Dashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Total Spending Card */}
-      <div className="mobile-card max-w-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+      {/* Financial Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mobile-card">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-500">Total Shipping Spend</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_spending.toLocaleString()} FCFA</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_spending.toLocaleString()} FCFA</p>
-            <p className="text-xs sm:text-sm text-gray-500">Total spending</p>
+        </div>
+        <div className="mobile-card">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <Banknote className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-500">COD Collected</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">--</p>
+            </div>
           </div>
         </div>
       </div>
@@ -161,8 +177,8 @@ const Dashboard: React.FC = () => {
       <div className="mobile-card !p-0 overflow-hidden">
         <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent deliveries</h2>
-            <p className="text-xs sm:text-sm text-gray-500">Most recent {recentDeliveries.length} orders</p>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Deliveries</h2>
+            <p className="text-xs sm:text-sm text-gray-500">Latest {recentDeliveries.length} orders</p>
           </div>
           <Link 
             to="/deliveries" 
@@ -200,10 +216,7 @@ const Dashboard: React.FC = () => {
             <thead className="bg-gray-50/50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Product
+                  Tracking ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Customer
@@ -232,11 +245,6 @@ const Dashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-900">
-                      {delivery.product_description}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
                       {delivery.customer_name}
                     </span>
                   </td>
@@ -258,7 +266,7 @@ const Dashboard: React.FC = () => {
                       to={`/delivery/${delivery.id}`}
                       className="text-sm text-orange-500 hover:text-orange-600 font-medium"
                     >
-                      Details →
+                      View →
                     </Link>
                   </td>
                 </tr>
@@ -269,7 +277,14 @@ const Dashboard: React.FC = () => {
 
         {recentDeliveries.length === 0 && (
           <div className="text-center py-12">
+            <Box className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-400 text-sm">No deliveries yet</p>
+            <Link
+              to="/create-delivery"
+              className="mt-4 inline-block px-5 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors text-sm font-medium"
+            >
+              Create your first delivery
+            </Link>
           </div>
         )}
       </div>

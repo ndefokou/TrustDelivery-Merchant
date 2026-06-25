@@ -4,12 +4,13 @@ import {
   LayoutDashboard,
   Package,
   Plus,
-  Wallet,
-  Menu,
-  X,
-  Truck,
+  MapPin,
+  Users,
+  Bell,
+  User,
   LogOut,
-  User
+  Truck,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { MERCHANT_STATUS_LABELS } from '../types';
@@ -26,8 +27,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Create Delivery', href: '/create-delivery', icon: Plus },
     { name: 'Deliveries', href: '/deliveries', icon: Package },
-    { name: 'New Delivery', href: '/create-delivery', icon: Plus },
+    { name: 'Tracking', href: '/tracking', icon: Truck },
+    { name: 'Saved Addresses', href: '/addresses', icon: MapPin },
+    { name: 'Customers', href: '/customers', icon: Users },
+    { name: 'Notifications', href: '/notifications', icon: Bell },
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
@@ -38,7 +43,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     navigate('/welcome', { replace: true });
   };
 
-  // Get user initials for avatar
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -109,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -127,20 +131,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           ))}
         </nav>
-
-        {/* Wallet Balance Card */}
-        <div className="absolute bottom-24 left-4 right-4">
-          <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/50">
-            <div className="flex items-center space-x-2 mb-2">
-              <Wallet className="w-4 h-4 text-orange-400" />
-              <span className="text-sm text-slate-400">Wallet balance</span>
-            </div>
-            <div className="flex items-baseline space-x-1">
-              <span className="text-2xl font-bold text-white">128 500</span>
-              <span className="text-sm text-slate-400">FCFA</span>
-            </div>
-          </div>
-        </div>
 
         {/* User Profile */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
@@ -177,9 +167,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Top bar - Desktop & Mobile header */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
           <div className="flex items-center justify-between h-14 sm:h-16 px-4 lg:px-8">
-            {/* Hamburger menu removed — mobile uses bottom navigation */}
-            <div className="hidden lg:block" />
-            
+            <div className="hidden lg:block">
+              <h1 className="text-lg font-semibold text-gray-900">Merchant Portal</h1>
+            </div>
             <div className="flex-1 lg:flex-none">
               <h1 className="text-lg font-bold text-gray-900 lg:hidden flex items-center gap-2">
                 <img src="/logo192.png" alt="TrustDelivery" className="w-7 h-7 rounded-lg object-contain bg-white" />
@@ -217,7 +207,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-gray-200 lg:hidden safe-area-bottom">
         <div className="flex items-center justify-around px-2 py-1">
-          {navigation.map((item) => {
+          {navigation.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
             return (
@@ -233,7 +223,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className={`text-[10px] mt-0.5 font-medium ${active ? 'text-orange-500' : ''}`}>
-                  {item.name === 'New Delivery' ? 'New' : item.name}
+                  {item.name === 'Dashboard' ? 'Home' : item.name.split(' ')[0]}
                 </span>
               </Link>
             );
